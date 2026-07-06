@@ -141,10 +141,10 @@
       <!-- Right controls and badges -->
       <div class="flex items-center gap-3">
         <button id="btn-audio" onclick="toggleAudio()" class="hidden"></button>
-        <button id="mode-badge" onclick="toggleModeOverride()" class="rounded-full border border-white/10 px-3 py-0.5 text-[9px] font-semibold tracking-wide uppercase transition-all hover:bg-white/5">LOADING</button>
+        <button id="mode-badge" onclick="toggleModeOverride()" class="hidden sm:inline-block rounded-full border border-white/10 px-3 py-0.5 text-[9px] font-semibold tracking-wide uppercase transition-all hover:bg-white/5">LOADING</button>
         <button id="btn-update" onclick="runDailyUpdate()" class="rounded-full bg-white hover:bg-neutral-200 px-4 py-1 text-[10px] font-semibold text-black transition-all active:scale-95 shadow-sm flex items-center gap-1.5">
           <i data-lucide="loader-2" class="h-3 w-3" id="update-spinner"></i>
-          <span id="update-btn-text">Update</span>
+          <span id="update-btn-text" class="hidden sm:inline">Update</span>
         </button>
       </div>
     </div>
@@ -465,10 +465,10 @@
                 <thead>
                   <tr class="text-slate-500 border-b border-white/5 pb-2 font-medium">
                     <th class="pb-3">代號 / 名稱</th>
-                    <th class="pb-3">進場日期</th>
+                    <th class="pb-3 hidden sm:table-cell">進場日期</th>
                     <th class="pb-3">股數</th>
-                    <th class="pb-3">買入均價</th>
-                    <th class="pb-3">最新收盤</th>
+                    <th class="pb-3 hidden sm:table-cell">買入均價</th>
+                    <th class="pb-3 hidden sm:table-cell">最新收盤</th>
                     <th class="pb-3 text-right">浮動損益 (TWD)</th>
                   </tr>
                 </thead>
@@ -535,14 +535,14 @@
             <thead>
               <tr class="text-slate-500 border-b border-white/5 pb-2.5 font-medium">
                 <th class="pb-2.5">標的代號/名稱</th>
-                <th class="pb-2.5">進場日期</th>
-                <th class="pb-2.5">出場日期</th>
-                <th class="pb-2.5">進場均價</th>
-                <th class="pb-2.5">出場均價</th>
-                <th class="pb-2.5">交易股數</th>
+                <th class="pb-2.5 hidden md:table-cell">進場日期</th>
+                <th class="pb-2.5 hidden sm:table-cell">出場日期</th>
+                <th class="pb-2.5 hidden sm:table-cell">進場均價</th>
+                <th class="pb-2.5 hidden sm:table-cell">出場均價</th>
+                <th class="pb-2.5 hidden sm:table-cell">交易股數</th>
                 <th class="pb-2.5">實現損益 (TWD)</th>
-                <th class="pb-2.5 text-center">持有天數</th>
-                <th class="pb-2.5 text-right">出場信號</th>
+                <th class="pb-2.5 text-center hidden sm:table-cell">持有天數</th>
+                <th class="pb-2.5 text-right hidden sm:table-cell">出場信號</th>
               </tr>
             </thead>
             <tbody id="strategies-table-trades" class="divide-y divide-white/5 text-slate-300 font-mono">
@@ -947,10 +947,10 @@
              posTable.innerHTML += `
               <tr class="table-row-hover border-b border-white/5" onclick="openDossierModal('${dataAttr}')">
                 <td class="py-3"><span class="text-white font-semibold font-sans text-xs">${pos.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans font-normal">${pos.name}</span></td>
-                <td class="py-3 font-mono">${pos.entry_date}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${pos.entry_date}</td>
                 <td class="py-3 font-mono">${pos.shares}</td>
-                <td class="py-3 font-mono text-slate-400">${Number(pos.entry_price).toFixed(2)}</td>
-                <td class="py-3 font-mono">${Number(pos.close).toFixed(2)}</td>
+                <td class="py-3 font-mono text-slate-400 hidden sm:table-cell">${Number(pos.entry_price).toFixed(2)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(pos.close).toFixed(2)}</td>
                 <td class="py-3 font-mono text-right font-semibold ${colorClass}">${sign}${formatCurrency(pos.unrealized_pnl)} (${sign}${Number(pos.unrealized_return_pct).toFixed(2)}%)</td>
               </tr>
             `;
@@ -1005,12 +1005,12 @@
               <tr class="table-row-hover border-b border-white/5">
                 <td class="py-3 font-semibold text-white font-sans">${cand.symbol}</td>
                 <td class="py-3 font-bold text-emerald-400 font-mono">${Number(cand.final_score).toFixed(1)}</td>
-                <td class="py-3 text-slate-400 font-mono">${Number(cand.technical_score).toFixed(1)}</td>
-                <td class="py-3 text-slate-400 font-mono">${Number(cand.fundamental_score).toFixed(1)}</td>
+                <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.technical_score).toFixed(1)}</td>
+                <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.fundamental_score).toFixed(1)}</td>
                 <td class="py-3 font-mono">${Number(cand.Close || cand.close).toFixed(2)}</td>
-                <td class="py-3 font-mono">${Number(cand.rsi14).toFixed(1)}</td>
-                <td class="py-3 font-mono">${Number(cand.volume_ratio).toFixed(2)}</td>
-                <td class="py-3 text-right uppercase text-[9px] font-bold text-slate-500 font-sans">${cand.market_regime}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.rsi14).toFixed(1)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.volume_ratio).toFixed(2)}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-bold text-slate-500 font-sans hidden sm:table-cell">${cand.market_regime}</td>
               </tr>
             `;
           });
@@ -1031,14 +1031,14 @@
             tradesTable.innerHTML += `
               <tr class="table-row-hover border-b border-white/5">
                 <td class="py-3"><span class="text-white font-semibold font-sans">${trade.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans">${trade.name}</span></td>
-                <td class="py-3 font-mono">${trade.entry_date}</td>
-                <td class="py-3 font-mono">${trade.exit_date}</td>
-                <td class="py-3 font-mono">${Number(trade.entry_price).toFixed(2)}</td>
-                <td class="py-3 font-mono">${Number(trade.exit_price).toFixed(2)}</td>
-                <td class="py-3 text-slate-400 font-mono">${trade.shares}</td>
+                <td class="py-3 font-mono hidden md:table-cell">${trade.entry_date}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${trade.exit_date}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(trade.entry_price).toFixed(2)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(trade.exit_price).toFixed(2)}</td>
+                <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${trade.shares}</td>
                 <td class="py-3 font-mono ${colorClass}">${sign}${formatCurrency(trade.pnl)} (${sign}${(Number(trade.return_pct)*100).toFixed(2)}%)</td>
-                <td class="py-3 text-center font-mono">${trade.holding_bars}</td>
-                <td class="py-3 text-right uppercase text-[9px] font-semibold text-slate-500 font-sans">${trade.exit_reason}</td>
+                <td class="py-3 text-center font-mono hidden sm:table-cell">${trade.holding_bars}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-semibold text-slate-500 font-sans hidden sm:table-cell">${trade.exit_reason}</td>
               </tr>
             `;
           });
