@@ -1255,12 +1255,17 @@
         const miniEqCtx = miniEqCtxEl.getContext("2d");
         if (miniEquityInstance) miniEquityInstance.destroy();
         
-        const equityData = snapshots.map(s => s.equity);
-        // Use null for missing/empty benchmark so Chart.js renders a gap instead of a false drop to zero
-        const benchmarkData = snapshots.map(s => (s.benchmark && Number(s.benchmark) > 0) ? Number(s.benchmark) : null);
+        // Rebase both series to 100 at first valid point for a fair comparison
+        const rawEquity = snapshots.map(s => Number(s.equity));
+        const rawBenchmark = snapshots.map(s => (s.benchmark && Number(s.benchmark) > 0) ? Number(s.benchmark) : null);
+        const base0 = rawEquity[0] || 1000000;
+        // Find first valid benchmark value as its base
+        const benchBase = rawBenchmark.find(v => v !== null) || base0;
+        const equityData = rawEquity.map(v => parseFloat(((v / base0) * 100).toFixed(2)));
+        const benchmarkData = rawBenchmark.map(v => v !== null ? parseFloat(((v / benchBase) * 100).toFixed(2)) : null);
         
         const greenGradient = miniEqCtx.createLinearGradient(0, 0, 0, 100);
-        greenGradient.addColorStop(0, 'rgba(16, 185, 129, 0.12)');
+        greenGradient.addColorStop(0, 'rgba(16, 185, 129, 0.18)');
         greenGradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
 
         miniEquityInstance = new Chart(miniEqCtx, {
@@ -1269,23 +1274,24 @@
             labels: labels,
             datasets: [
               {
-                label: 'Equity',
+                label: 'Equity (rebased)',
                 data: equityData,
                 borderColor: '#10b981',
                 backgroundColor: greenGradient,
-                fill: true,
+                fill: 'origin',
                 tension: 0.15,
                 borderWidth: 1.5,
                 pointRadius: 0,
               },
               {
-                label: 'Benchmark',
+                label: 'Benchmark (rebased)',
                 data: benchmarkData,
-                borderColor: '#48484a',
+                borderColor: '#6b7280',
                 fill: false,
                 tension: 0.1,
                 borderWidth: 1,
-                pointRadius: 0
+                pointRadius: 0,
+                spanGaps: false,
               }
             ]
           },
@@ -1295,7 +1301,10 @@
             plugins: { legend: { display: false } },
             scales: {
               x: { grid: { display: false }, ticks: { display: false } },
-              y: { grid: { display: false }, ticks: { display: false } }
+              y: {
+                grid: { display: false },
+                ticks: { display: false },
+              }
             }
           }
         });
