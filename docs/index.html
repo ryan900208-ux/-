@@ -673,9 +673,10 @@
   </div>
 
   <script>
-    const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-      ? window.location.origin 
+    const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+      ? window.location.origin
       : "http://localhost:8000";
+    const GITHUB_ACTIONS_URL = "https://github.com/ryan900208-ux/-/actions";
     let chartInstance = null;
     let miniEquityInstance = null;
     let miniDrawdownInstance = null;
@@ -686,6 +687,10 @@
     let currentDossierSymbol = null;
     let globalPendingOrders = [];
 
+    // XSS-safe HTML escaping helper
+    function esc(str) {
+      return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
     // Helper functions for bulletproof defensive DOM editing
     function safeSetText(id, text) {
       const el = document.getElementById(id);
@@ -732,13 +737,9 @@
     function playSound(type) {}
     function bindInteractiveEffects() {}
 
-    function updateClock() {
-      const now = new Date();
-      const timeStr = now.toTimeString().split(' ')[0];
-      safeSetText("header-clock", timeStr);
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+    // Clock function kept for future use but setInterval removed (no header-clock element in DOM)
+    function updateClock() {}
+    // updateClock disabled — no header-clock element
 
     const fakeLogTemplates = [
       "[QUANT] Relative Strength ranks calculated: filter pass rate 85%",
@@ -760,18 +761,19 @@
       consoleLogs.scrollTop = consoleLogs.scrollHeight;
     }
 
+    let fakeLogInterval = null; // BUG-20 fix: prevent stacking multiple intervals
     function initFakeConsole(cash, equity, regime) {
       const consoleLogs = document.getElementById("console-logs");
       if (!consoleLogs) return;
       consoleLogs.innerHTML = "";
-      addFakeLog(`[SYS] Quantum Workstation initialized on localhost:8000`);
+      addFakeLog(`[SYS] Quantum Workstation initialized`);
       addFakeLog(`[PORTFOLIO] Initial cash: 1,000,000 TWD // Current equity: ${formatCurrency(equity)} TWD`);
-      addFakeLog(`[REGIME] Benchmark 0050 index regime detected: ${regime.toUpperCase()}`);
-      
-      setInterval(() => {
+      addFakeLog(`[REGIME] Benchmark 0050 index regime detected: ${esc(regime).toUpperCase()}`);
+
+      if (fakeLogInterval) clearInterval(fakeLogInterval);
+      fakeLogInterval = setInterval(() => {
         const randIndex = Math.floor(Math.random() * fakeLogTemplates.length);
-        let logText = fakeLogTemplates[randIndex];
-        addFakeLog(logText);
+        addFakeLog(fakeLogTemplates[randIndex]);
       }, 15000);
     }
 
@@ -853,7 +855,7 @@
 
           if (latestDate) {
             fetch(`./outputs/paper_trading/signals/candidates_${latestDate}.csv`)
-              .then(res => res.text())
+              .then(res => res.ok ? res.text() : "") // BUG-10: return empty string on 404 instead of HTML error page
               .then(candText => {
                 const candidates = parseCSV(candText);
                 const regime = candidates.length > 0 ? candidates[0].market_regime : "neutral";
@@ -879,10 +881,11 @@
       let equity = 1000000.0;
       if (snapshots.length > 0) {
         const lastSnap = snapshots[snapshots.length - 1];
-        equity = lastSnap.equity;
-        total_return_pct = lastSnap.total_return_pct;
+        equity = Number(lastSnap.equity) || 1000000.0;
+        total_return_pct = Number(lastSnap.total_return_pct) || 0.0;
       } else {
-        total_return_pct = (state.cash / state.initial_cash - 1) * 100;
+        // BUG-05: guard against missing initial_cash
+        total_return_pct = state.initial_cash > 0 ? (state.cash / state.initial_cash - 1) * 100 : 0;
       }
 
       const payload = {
@@ -912,7 +915,7 @@
       safeSetText("kpi-equity", formatCurrency(data.equity));
       safeSetText("kpi-cash", formatCurrency(data.cash));
 
-      const cashPct = (data.cash / data.equity) * 100;
+      const cashPct = (data.equity > 0) ? (data.cash / data.equity) * 100 : 0; // BUG-04: guard division by zero
       const cashBar = document.getElementById("kpi-cash-bar");
       if (cashBar) cashBar.style.width = `${cashPct}%`;
       safeSetText("kpi-cash-pct", `${cashPct.toFixed(1)}%`);
@@ -946,13 +949,13 @@
           data.positions.forEach(pos => {
             const sign = pos.unrealized_pnl >= 0 ? "+" : "";
             const colorClass = pos.unrealized_pnl >= 0 ? "text-emerald-400" : "text-rose-400";
-            const dataAttr = encodeURIComponent(JSON.stringify(pos));
+            const dataAttr = encodeURIComponent(JSON.stringify(pos)); // BUG-08: encoded for safe HTML attribute
 
-             posTable.innerHTML += `
+            posTable.innerHTML += `
               <tr class="table-row-hover border-b border-white/5" onclick="openDossierModal('${dataAttr}')">
-                <td class="py-3"><span class="text-white font-semibold font-sans text-xs">${pos.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans font-normal">${pos.name}</span></td>
-                <td class="py-3 font-mono hidden sm:table-cell">${pos.entry_date}</td>
-                <td class="py-3 font-mono">${pos.shares}</td>
+                <td class="py-3"><span class="text-white font-semibold font-sans text-xs">${esc(pos.symbol)}</span><br><span class="text-slate-500 text-[9px] font-sans font-normal">${esc(pos.name)}</span></td>
+                <td class="py-3 font-mono hidden sm:table-cell">${esc(pos.entry_date)}</td>
+                <td class="py-3 font-mono">${esc(String(pos.shares))}</td>
                 <td class="py-3 font-mono text-slate-400 hidden sm:table-cell">${Number(pos.entry_price).toFixed(2)}</td>
                 <td class="py-3 font-mono hidden sm:table-cell">${Number(pos.close).toFixed(2)}</td>
                 <td class="py-3 font-mono text-right font-semibold ${colorClass}">${sign}${formatCurrency(pos.unrealized_pnl)} (${sign}${Number(pos.unrealized_return_pct).toFixed(2)}%)</td>
@@ -1007,14 +1010,14 @@
           data.candidates.forEach(cand => {
             candTable.innerHTML += `
               <tr class="table-row-hover border-b border-white/5">
-                <td class="py-3 font-semibold text-white font-sans">${cand.symbol}</td>
+                <td class="py-3 font-semibold text-white font-sans">${esc(cand.symbol)}</td>
                 <td class="py-3 font-bold text-emerald-400 font-mono">${Number(cand.final_score).toFixed(1)}</td>
                 <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.technical_score).toFixed(1)}</td>
                 <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.fundamental_score).toFixed(1)}</td>
-                <td class="py-3 font-mono">${Number(cand.Close || cand.close).toFixed(2)}</td>
-                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.rsi14).toFixed(1)}</td>
-                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.volume_ratio).toFixed(2)}</td>
-                <td class="py-3 text-right uppercase text-[9px] font-bold text-slate-500 font-sans hidden sm:table-cell">${cand.market_regime}</td>
+                <td class="py-3 font-mono">${Number(cand.Close ?? cand.close ?? 0).toFixed(2)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.rsi14 ?? 0).toFixed(1)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${Number(cand.volume_ratio ?? 0).toFixed(2)}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-bold text-slate-500 font-sans hidden sm:table-cell">${esc(cand.market_regime)}</td>
               </tr>
             `;
           });
@@ -1032,17 +1035,19 @@
           [...data.trades].reverse().forEach(trade => {
             const colorClass = trade.pnl >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold";
             const sign = trade.pnl >= 0 ? "+" : "";
+            // BUG-16: return_pct may already be a percentage (>1.5 heuristic) or decimal fraction
+            const retPct = Math.abs(Number(trade.return_pct)) > 1.5 ? Number(trade.return_pct) : Number(trade.return_pct) * 100;
             tradesTable.innerHTML += `
               <tr class="table-row-hover border-b border-white/5">
-                <td class="py-3"><span class="text-white font-semibold font-sans">${trade.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans">${trade.name}</span></td>
-                <td class="py-3 font-mono hidden md:table-cell">${trade.entry_date}</td>
-                <td class="py-3 font-mono hidden sm:table-cell">${trade.exit_date}</td>
+                <td class="py-3"><span class="text-white font-semibold font-sans">${esc(trade.symbol)}</span><br><span class="text-slate-500 text-[9px] font-sans">${esc(trade.name)}</span></td>
+                <td class="py-3 font-mono hidden md:table-cell">${esc(trade.entry_date)}</td>
+                <td class="py-3 font-mono hidden sm:table-cell">${esc(trade.exit_date)}</td>
                 <td class="py-3 font-mono hidden sm:table-cell">${Number(trade.entry_price).toFixed(2)}</td>
                 <td class="py-3 font-mono hidden sm:table-cell">${Number(trade.exit_price).toFixed(2)}</td>
-                <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${trade.shares}</td>
-                <td class="py-3 font-mono ${colorClass}">${sign}${formatCurrency(trade.pnl)} (${sign}${(Number(trade.return_pct)*100).toFixed(2)}%)</td>
-                <td class="py-3 text-center font-mono hidden sm:table-cell">${trade.holding_bars}</td>
-                <td class="py-3 text-right uppercase text-[9px] font-semibold text-slate-500 font-sans hidden sm:table-cell">${trade.exit_reason}</td>
+                <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${esc(String(trade.shares))}</td>
+                <td class="py-3 font-mono ${colorClass}">${sign}${formatCurrency(trade.pnl)} (${sign}${retPct.toFixed(2)}%)</td>
+                <td class="py-3 text-center font-mono hidden sm:table-cell">${esc(String(trade.holding_bars))}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-semibold text-slate-500 font-sans hidden sm:table-cell">${esc(trade.exit_reason)}</td>
               </tr>
             `;
           });
@@ -1125,7 +1130,8 @@
       if (profitCtxEl) {
         const ctx = profitCtxEl.getContext("2d");
         const labels = snapshots.map(s => s.date);
-        const profitData = snapshots.map(s => s.equity - 1000000);
+        const initialCapital = snapshots.length > 0 ? (Number(snapshots[0].equity) || 1000000) : 1000000; // BUG-30: don't hardcode
+        const profitData = snapshots.map(s => s.equity - initialCapital);
 
         if (netProfitChartInstance) {
           netProfitChartInstance.destroy();
@@ -1177,7 +1183,10 @@
     function fetchHoldingsHistory() {
       const url = isLocalServer ? `${API_URL}/api/holdings/history` : './outputs/paper_trading/holdings_history.json';
       fetch(url)
-        .then(res => res.json())
+        .then(res => { // BUG-06: check res.ok before parsing
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
         .then(data => {
           const chartEl = document.getElementById("holdingsTrendChart");
           if (!chartEl) return;
@@ -1238,9 +1247,12 @@
             }
           });
         })
-        .catch(err => {
-          console.error("Failed to load holdings history:", err);
-        });
+          .catch(err => {
+            console.error("Failed to load holdings history:", err);
+            showOverlay("empty-holdings-chart");
+            const chartEl = document.getElementById("holdingsTrendChart");
+            if (chartEl) chartEl.classList.add("hidden");
+          });
     }
 
     // Mini charts for the 1:1 replica report tab
@@ -1278,7 +1290,7 @@
                 data: equityData,
                 borderColor: '#10b981',
                 backgroundColor: greenGradient,
-                fill: 'origin',
+                fill: true, // BUG-17: use 'true' not 'origin'; gradient fills correctly to x-axis baseline
                 tension: 0.15,
                 borderWidth: 1.5,
                 pointRadius: 0,
@@ -1291,7 +1303,7 @@
                 tension: 0.1,
                 borderWidth: 1,
                 pointRadius: 0,
-                spanGaps: false,
+                spanGaps: true, // BUG-18: bridge over null gaps for a continuous reference line
               }
             ]
           },
@@ -1356,7 +1368,13 @@
     }
 
     function openDossierModal(dataAttr) {
-      const pos = JSON.parse(decodeURIComponent(dataAttr));
+      let pos;
+      try {
+        pos = JSON.parse(decodeURIComponent(dataAttr)); // BUG-27: guard against malformed JSON
+      } catch (e) {
+        console.error("openDossierModal: failed to parse position data", e);
+        return;
+      }
       currentDossierSymbol = pos.symbol;
 
       const exitBtn = document.getElementById("btn-schedule-exit");
@@ -1390,8 +1408,9 @@
       safeSetText("dossier-cost", `${formatCurrency(pos.entry_price)} 元 (${pos.entry_date})`);
       safeSetText("dossier-value", `${formatCurrency(pos.market_value)} 元`);
 
-      const stopPrice = pos.entry_price * 0.88;
-      safeSetText("dossier-stop", `${stopPrice.toFixed(2)} 元 (現價: ${pos.close.toFixed(2)} 元)`);
+      const stopPrice = Number(pos.entry_price) * 0.88; // BUG-28: ensure numeric conversion
+      const closePrice = Number(pos.close) || 0;
+      safeSetText("dossier-stop", `${stopPrice.toFixed(2)} 元 (現價: ${closePrice.toFixed(2)} 元)`);
 
       const modal = document.getElementById("dossier-modal");
       if (modal) {
@@ -1418,6 +1437,11 @@
 
     function scheduleExit() {
       if (!currentDossierSymbol) return;
+      // BUG-02: scheduleExit must only work in local API mode
+      if (!isLocalServer) {
+        alert("此功能需要本地 API 伺服器才能運作。\n請切換至 LOCAL API 模式後再試。");
+        return;
+      }
       
       const btn = document.getElementById("btn-schedule-exit");
       const btnText = document.getElementById("btn-schedule-exit-text");
@@ -1481,7 +1505,7 @@
         alert("自動更新目前是由 GitHub Actions 排程每日執行 (台北時間 16:15)。\n\n網頁將引導您前往 GitHub Actions 頁面，您可以登入並點擊 'Run workflow' 手動觸發即時更新。");
         const pathParts = window.location.pathname.split('/');
         const repoName = pathParts[1] || '';
-        window.open(`https://github.com/${window.location.hostname.split('.')[0]}/${repoName}/actions`, '_blank');
+        window.open(GITHUB_ACTIONS_URL, '_blank'); // BUG-26: use hardcoded constant instead of fragile hostname parsing
       }
     }
 
@@ -1497,7 +1521,10 @@
 
       updateInterval = setInterval(() => {
         fetch(`${API_URL}/api/update/status`)
-          .then(res => res.json())
+          .then(res => { // BUG-07: check res.ok before parsing
+            if (!res.ok) throw new Error(`Status HTTP ${res.status}`);
+            return res.json();
+          })
           .then(data => {
             if (data.status === "running") {
               showOverlay("update-progress-container");
@@ -1533,6 +1560,12 @@
               hideOverlay("update-progress-container");
               addFakeLog(`[ERROR] Daily update script failed (code ${data.code}).`);
               alert("執行更新失敗，請檢查 API 伺服器終端機日誌。");
+              if (spinner) spinner.classList.remove("animate-spin");
+              if (btn) btn.disabled = false;
+              if (btnText) btnText.textContent = "Update";
+            } else {
+              // BUG-07: unknown status — stop polling to prevent infinite loop
+              clearInterval(updateInterval);
               if (spinner) spinner.classList.remove("animate-spin");
               if (btn) btn.disabled = false;
               if (btnText) btnText.textContent = "Update";
@@ -1582,7 +1615,8 @@
     }
 
     function formatCurrency(val) {
-      return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(val);
+      // BUG-13: guard against undefined/NaN input
+      return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(Number(val) || 0);
     }
 
     function switchToServerlessMode() {
