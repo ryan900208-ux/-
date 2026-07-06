@@ -14,3 +14,6 @@ outputs/backtest/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Ignore huge backtest features file
+docs/outputs/backtest/daily_features.csv

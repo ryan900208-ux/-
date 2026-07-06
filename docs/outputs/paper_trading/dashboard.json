@@ -1,9 +1,9 @@
 {
-  "date": "2026-07-06",
+  "date": "2026-07-03",
   "market_regime": "bull",
   "cash": 1478.3360330386786,
-  "equity": 1024854.8360330387,
-  "total_return_pct": 2.485483603303873,
+  "equity": 1007037.3360330387,
+  "total_return_pct": 0.7037336033038688,
   "positions": [
     {
       "symbol": "2408.TW",
@@ -14,10 +14,11 @@
       "entry_price": 455.0,
       "entry_cost": 199745.0,
       "holding_bars": 6,
-      "close": 420.5,
-      "market_value": 184599.5,
-      "unrealized_pnl": -15145.5,
-      "unrealized_return_pct": -7.582417582417578
+      "close": 409.5,
+      "market_value": 179770.5,
+      "unrealized_pnl": -19974.5,
+      "unrealized_return_pct": -9.999999999999998,
+      "last_bar_date": "2026-07-03"
     },
     {
       "symbol": "2344.TW",
@@ -28,10 +29,11 @@
       "entry_price": 207.0,
       "entry_cost": 199962.0,
       "holding_bars": 6,
-      "close": 183.0,
-      "market_value": 176778.0,
-      "unrealized_pnl": -23184.0,
-      "unrealized_return_pct": -11.594202898550721
+      "close": 184.5,
+      "market_value": 178227.0,
+      "unrealized_pnl": -21735.0,
+      "unrealized_return_pct": -10.869565217391308,
+      "last_bar_date": "2026-07-03"
     },
     {
       "symbol": "6446.TW",
@@ -42,10 +44,11 @@
       "entry_price": 960.0,
       "entry_cost": 199680.0,
       "holding_bars": 18,
-      "close": 1445.0,
-      "market_value": 300560.0,
-      "unrealized_pnl": 100880.0,
-      "unrealized_return_pct": 50.52083333333333
+      "close": 1395.0,
+      "market_value": 290160.0,
+      "unrealized_pnl": 90480.0,
+      "unrealized_return_pct": 45.3125,
+      "last_bar_date": "2026-07-03"
     },
     {
       "symbol": "3006.TW",
@@ -56,10 +59,11 @@
       "entry_price": 255.79342377331795,
       "entry_cost": 199774.66396696132,
       "holding_bars": 24,
-      "close": 219.0,
-      "market_value": 171039.0,
-      "unrealized_pnl": -28735.66396696132,
-      "unrealized_return_pct": -14.384038194009241
+      "close": 211.5,
+      "market_value": 165181.5,
+      "unrealized_pnl": -34593.16396696132,
+      "unrealized_return_pct": -17.316091680515765,
+      "last_bar_date": "2026-07-03"
     },
     {
       "symbol": "7769.TW",
@@ -70,10 +74,11 @@
       "entry_price": 7120.0,
       "entry_cost": 199360.0,
       "holding_bars": 26,
-      "close": 6800.0,
-      "market_value": 190400.0,
-      "unrealized_pnl": -8960.0,
-      "unrealized_return_pct": -4.49438202247191
+      "close": 6865.0,
+      "market_value": 192220.0,
+      "unrealized_pnl": -7140.0,
+      "unrealized_return_pct": -3.5814606741572996,
+      "last_bar_date": "2026-07-03"
     }
   ],
   "pending_orders": [
@@ -350,7 +355,7 @@
       "pending_orders": 0,
       "candidate_rows": 0,
       "exit_signals": 0,
-      "benchmark": 1039715.66
+      "benchmark": 1036492.88
     },
     {
       "date": "2026-07-02",
@@ -365,18 +370,6 @@
       "benchmark": 1031279.65
     },
     {
-      "date": "2026-07-03",
-      "cash": 1478.34,
-      "market_value": 1005559.0,
-      "equity": 1007037.34,
-      "total_return_pct": 0.7037,
-      "positions": 5,
-      "pending_orders": 0,
-      "candidate_rows": 0,
-      "exit_signals": 0,
-      "benchmark": 1027014.2
-    },
-    {
       "date": "2026-07-06",
       "cash": 1478.3360330386786,
       "market_value": 1023376.5,
@@ -386,7 +379,19 @@
       "pending_orders": 1,
       "candidate_rows": 0,
       "exit_signals": 1,
-      "benchmark": NaN
+      "benchmark": 1026066.35
+    },
+    {
+      "date": "2026-07-03",
+      "cash": 1478.3360330386786,
+      "market_value": 1005559.0,
+      "equity": 1007037.3360330388,
+      "total_return_pct": 0.7037336033038688,
+      "positions": 5,
+      "pending_orders": 1,
+      "candidate_rows": 0,
+      "exit_signals": 1,
+      "benchmark": 5433762.72
     }
   ]
 }
