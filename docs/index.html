@@ -300,8 +300,8 @@
                 <span id="report-total-return" class="text-lg sm:text-xl font-semibold text-emerald-400 mt-1 block">+957.35%</span>
               </div>
               <div class="p-3 bg-white/5 rounded-xl border border-white/5">
-                <span class="text-[9px] text-slate-500 font-semibold block uppercase">Net Profit</span>
-                <span id="report-net-profit" class="text-lg sm:text-xl font-semibold text-white mt-1 block">+9.57M 元</span>
+                <span class="text-[9px] text-slate-500 font-semibold block uppercase">Net Profit (TWD)</span>
+                <span id="report-net-profit" class="text-lg sm:text-xl font-semibold text-white mt-1 block">+9.57M</span>
               </div>
               <div class="p-3 bg-white/5 rounded-xl border border-white/5">
                 <span class="text-[9px] text-slate-500 font-semibold block uppercase">Trades Count</span>
@@ -434,13 +434,13 @@
             <span id="kpi-return" class="text-xl sm:text-2xl font-light text-white tracking-tight mt-1.5 block">0.00%</span>
           </div>
           <div class="apple-card p-5">
-            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶總權益</span>
-            <span id="kpi-equity" class="text-xl sm:text-2xl font-light text-white tracking-tight mt-1.5 block">1,000,000 元</span>
+            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶總權益 (TWD)</span>
+            <span id="kpi-equity" class="text-xl sm:text-2xl font-light text-white tracking-tight mt-1.5 block">1,000,000</span>
           </div>
           <div class="apple-card p-5">
-            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶可用現金</span>
+            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶可用現金 (TWD)</span>
             <div class="flex justify-between items-baseline mt-1.5">
-              <span id="kpi-cash" class="text-xl sm:text-2xl font-light text-white tracking-tight">1,000,000 元</span>
+              <span id="kpi-cash" class="text-xl sm:text-2xl font-light text-white tracking-tight">1,000,000</span>
               <span id="kpi-cash-pct" class="text-[10px] text-slate-400 font-mono">100.0%</span>
             </div>
             <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1.5">
@@ -909,8 +909,8 @@
       globalPendingOrders = data.pending_orders || [];
       // 1. KPI Cards
       safeSetText("kpi-return", `${Number(data.total_return_pct).toFixed(2)}%`);
-      safeSetText("kpi-equity", `${formatCurrency(data.equity)} 元`);
-      safeSetText("kpi-cash", `${formatCurrency(data.cash)} 元`);
+      safeSetText("kpi-equity", formatCurrency(data.equity));
+      safeSetText("kpi-cash", formatCurrency(data.cash));
 
       const cashPct = (data.cash / data.equity) * 100;
       const cashBar = document.getElementById("kpi-cash-bar");
