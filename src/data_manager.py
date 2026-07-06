@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -82,11 +81,22 @@ def download_ohlcv(
         )
 
         if len(batch) == 1:
-            frame = _clean_ohlcv(raw)
+            symbol = batch[0]
+            # BUG-31: handle yfinance MultiIndex output on single-ticker download
+            if isinstance(raw.columns, pd.MultiIndex):
+                if symbol in raw.columns.get_level_values(0):
+                    ticker_frame = raw[symbol]
+                elif symbol in raw.columns.get_level_values(1):
+                    ticker_frame = raw.xs(symbol, axis=1, level=1)
+                else:
+                    ticker_frame = raw
+            else:
+                ticker_frame = raw
+            frame = _clean_ohlcv(ticker_frame)
             if not frame.empty:
-                data[batch[0]] = frame
+                data[symbol] = frame
                 if cache_path:
-                    _write_cached_ohlcv(cache_path, batch[0], frame)
+                    _write_cached_ohlcv(cache_path, symbol, frame)
             continue
 
         available = set(raw.columns.get_level_values(0))
@@ -112,7 +122,10 @@ def _clean_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
     
     # Adjust OHLC for corporate actions if Adj Close is present
     if "Adj Close" in df.columns:
-        ratio = df["Adj Close"] / df["Close"]
+        # BUG-29: Avoid division by zero if Close is 0
+        close_safe = df["Close"].replace(0, np.nan)
+        ratio = df["Adj Close"] / close_safe
+        ratio = ratio.fillna(1.0).replace([np.inf, -np.inf], 1.0)
         for col in ("Open", "High", "Low", "Close"):
             df[col] = df[col] * ratio
             

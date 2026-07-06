@@ -45,7 +45,8 @@ class Position:
 
 
 def _write_progress(progress: int, message: str, seconds_left: int) -> None:
-    path = ROOT / "outputs" / "paper_trading" / "progress.json"
+    # BUG-01: use same path as api_app.py reads (docs/outputs/...)
+    path = ROOT / "docs" / "outputs" / "paper_trading" / "progress.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with open(path, "w", encoding="utf-8") as handle:
@@ -181,7 +182,8 @@ def main() -> None:
 
     # Delete progress file upon successful completion
     try:
-        progress_path = ROOT / "outputs" / "paper_trading" / "progress.json"
+        # BUG-01: cleanup matches the correct path now
+        progress_path = ROOT / "docs" / "outputs" / "paper_trading" / "progress.json"
         if progress_path.exists():
             progress_path.unlink()
     except Exception:
@@ -228,8 +230,18 @@ def _load_state() -> dict:
 
 
 def _save_state(state: dict) -> None:
-    with STATE_PATH.open("w", encoding="utf-8") as handle:
-        json.dump(state, handle, ensure_ascii=False, indent=2)
+    # BUG-06: atomic write via temp file to prevent corruption on crash mid-write
+    import tempfile
+    tmp_path = STATE_PATH.with_suffix(".tmp")
+    try:
+        with tmp_path.open("w", encoding="utf-8") as handle:
+            json.dump(state, handle, ensure_ascii=False, indent=2)
+        import os
+        os.replace(tmp_path, STATE_PATH)
+    except Exception:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
 
 
 def _execute_pending_orders(state: dict) -> dict:
@@ -275,6 +287,10 @@ def _execute_pending_orders(state: dict) -> dict:
                 print(f"Executed SELL order: {pos['symbol']} at {open_price:.2f} on {trade_date}")
 
         elif order["type"] == "buy":
+            # BUG-08: guard against duplicate positions
+            if _find_position(state, order["symbol"]):
+                print(f"Skipped BUY order: {order['symbol']} (position already exists)")
+                continue
             # Buy execution
             equity = _portfolio_equity(state)
             budget = min(state["cash"], equity * POSITION_WEIGHT)
@@ -312,7 +328,12 @@ def _apply_exits(state: dict, panel: pd.DataFrame, signal_date: pd.Timestamp) ->
         if pos["symbol"] not in latest_panel.index:
             continue
         row = latest_panel.loc[pos["symbol"]]
-        pos["holding_bars"] = int(pos.get("holding_bars", 0)) + 1
+        # BUG-09: guard against double-increment on same day (re-run protection)
+        last_bar_date = pos.get("last_bar_date", "")
+        current_date_str = str(signal_date.date())
+        if last_bar_date != current_date_str:
+            pos["holding_bars"] = int(pos.get("holding_bars", 0)) + 1
+            pos["last_bar_date"] = current_date_str
         
         reason = _check_exit_reason(pos, row)
         if reason:
@@ -342,7 +363,13 @@ def _apply_exits(state: dict, panel: pd.DataFrame, signal_date: pd.Timestamp) ->
 def _check_exit_reason(pos: dict, row: pd.Series) -> str | None:
     if row.get("market_regime") == "bear":
         return "market_bear"
-    close = float(row.get("Close", 0))
+    close = row.get("Close")
+    # BUG-10: guard against missing Close value — never trigger false stop-loss
+    if close is None:
+        return None
+    close = float(close)
+    if close <= 0:
+        return None  # price data error; skip exit logic
     if close <= float(pos["entry_price"]) * (1 - STOP_LOSS):
         return "stop_loss"
     if int(pos.get("holding_bars", 0)) >= MAX_HOLDING_DAYS:
@@ -383,7 +410,7 @@ def _portfolio_equity(state: dict) -> float:
     value = float(state["cash"])
     for pos in state.get("positions", []):
         close = _get_last_close(pos["symbol"])
-        if close:
+        if close is not None:  # BUG-04: use 'is not None' to handle close=0.0 correctly
             value += pos["shares"] * close
     return value
 
@@ -391,6 +418,24 @@ def _portfolio_equity(state: dict) -> float:
 def _snapshot(state: dict, panel: pd.DataFrame, latest_date: pd.Timestamp, candidates_count: int, exits_count: int) -> dict:
     equity = _portfolio_equity(state)
     holdings_mv = sum(pos["shares"] * (_get_last_close(pos["symbol"]) or 0.0) for pos in state["positions"])
+
+    # Compute benchmark equity: rebase 0050.TW close to INITIAL_CASH
+    # BUG-15: initialize as None (not empty string) for type consistency
+    benchmark_equity = None
+    try:
+        bench_frame = _read_cached_prices("0050.TW")
+        if not bench_frame.empty:
+            # First close available in cache (baseline)
+            first_close = float(bench_frame.iloc[0]["Close"])
+            # Close on or before the snapshot date
+            snap_ts = pd.Timestamp(latest_date.date())
+            past = bench_frame[bench_frame.index.normalize() <= snap_ts]
+            if not past.empty and first_close > 0:
+                day_close = float(past.iloc[-1]["Close"])
+                benchmark_equity = round(INITIAL_CASH * (day_close / first_close), 2)
+    except Exception:
+        pass
+
     return {
         "date": str(latest_date.date()),
         "cash": state["cash"],
@@ -401,6 +446,7 @@ def _snapshot(state: dict, panel: pd.DataFrame, latest_date: pd.Timestamp, candi
         "pending_orders": len(state["pending_orders"]),
         "candidate_rows": candidates_count,
         "exit_signals": exits_count,
+        "benchmark": benchmark_equity,
     }
 
 
@@ -494,8 +540,20 @@ def _generate_static_json_payloads(state: dict, latest_date: pd.Timestamp, snaps
         }
         
         dashboard_path = ROOT / "docs" / "outputs" / "paper_trading" / "dashboard.json"
+        # BUG-12: sanitize NaN/Inf values from pandas before json.dump
+        def _sanitize(obj):
+            if isinstance(obj, float):
+                import math
+                if math.isnan(obj) or math.isinf(obj):
+                    return None
+                return obj
+            if isinstance(obj, dict):
+                return {k: _sanitize(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_sanitize(v) for v in obj]
+            return obj
         with open(dashboard_path, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            json.dump(_sanitize(payload), handle, ensure_ascii=False, indent=2)
         print(f"Pre-compiled static dashboard payload written to {dashboard_path.name}")
         
         # 2. Compile holdings_history.json

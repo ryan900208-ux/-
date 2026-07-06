@@ -26,7 +26,9 @@ def add_indicators(frame: pd.DataFrame) -> pd.DataFrame:
     df["ma20_slope"] = df["ma20"].diff(5) / df["ma20"].shift(5)
     df["rsi14"] = rsi(close, 14)
     df["volume_ma20"] = volume.rolling(20).mean()
-    df["volume_ratio"] = volume / df["volume_ma20"]
+    # BUG-33: replace 0 with NaN to avoid division-by-zero causing inf
+    vol_ma20_safe = df["volume_ma20"].replace(0, np.nan)
+    df["volume_ratio"] = (volume / vol_ma20_safe).fillna(1.0).replace([np.inf, -np.inf], 1.0)
     df["ma20_deviation"] = (close / df["ma20"]) - 1
     return df
 

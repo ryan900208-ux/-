@@ -61,5 +61,6 @@
     "enabled": true,
     "min_score": 0,
     "top_n": 15
-  }
+  },
+  "yfinance_batch_size": 80
 }

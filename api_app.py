@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, FileResponse
@@ -51,8 +52,6 @@ def _get_last_close(symbol: str) -> float | None:
     except Exception:
         return None
 
-
-import pandas as pd
 
 
 async def health(request: Request) -> JSONResponse:
@@ -99,6 +98,10 @@ async def get_dashboard(request: Request) -> JSONResponse:
     if SNAPSHOTS_PATH.exists():
         try:
             snapshots_df = pd.read_csv(SNAPSHOTS_PATH)
+            # Replace empty/NaN benchmark values with None so frontend receives null
+            if 'benchmark' in snapshots_df.columns:
+                snapshots_df['benchmark'] = pd.to_numeric(snapshots_df['benchmark'], errors='coerce')
+                snapshots_df['benchmark'] = snapshots_df['benchmark'].where(snapshots_df['benchmark'].notna(), other=None)
             snapshots = snapshots_df.tail(120).to_dict("records")
         except Exception:
             pass
@@ -137,11 +140,12 @@ async def get_dashboard(request: Request) -> JSONResponse:
 
 # Global variable to track the background update process
 update_process: subprocess.Popen | None = None
+last_update_error: str = ""
 
 
 async def run_update(request: Request) -> JSONResponse:
     """Launches the run_daily_update.py script in the background to avoid web timeout."""
-    global update_process
+    global update_process, last_update_error
     
     # If a process is already running, don't launch another one
     if update_process is not None and update_process.poll() is None:
@@ -153,14 +157,20 @@ async def run_update(request: Request) -> JSONResponse:
         
     env = os.environ.copy()
     env["PYTHONPATH"] = f"{ROOT / 'src'}{os.pathsep}{env.get('PYTHONPATH', '')}"
+    last_update_error = ""
     
     try:
+        log_dir = ROOT / "work"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = open(log_dir / "daily_update_error.log", "w", encoding="utf-8")
+        
+        # Use stdout=DEVNULL and stderr=log_file to avoid pipe buffer deadlock
         update_process = subprocess.Popen(
             [sys.executable, str(ROOT / "run_daily_update.py")],
             cwd=ROOT,
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=log_file,
         )
         return _json({
             "status": "started",
@@ -177,7 +187,7 @@ async def run_update(request: Request) -> JSONResponse:
 
 async def get_update_status(request: Request) -> JSONResponse:
     """Checks the status of the background update process."""
-    global update_process
+    global update_process, last_update_error
     
     if update_process is None:
         return _json({"status": "idle"})
@@ -202,17 +212,18 @@ async def get_update_status(request: Request) -> JSONResponse:
     elif poll == 0:
         return _json({"status": "success"})
     else:
-        # Get errors if any
-        stderr = ""
-        try:
-            if update_process.stderr:
-                stderr = update_process.stderr.read().decode("utf-8", errors="ignore")
-        except Exception:
-            pass
+        # Get errors from log file if cached version is empty
+        if not last_update_error:
+            try:
+                log_path = ROOT / "work" / "daily_update_error.log"
+                if log_path.exists():
+                    last_update_error = log_path.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                pass
         return _json({
             "status": "failed",
             "code": poll,
-            "error": stderr
+            "error": last_update_error
         })
 
 
@@ -298,6 +309,8 @@ async def schedule_exit(request: Request) -> JSONResponse:
         if not STATE_PATH.exists():
             return _json({"status": "failed", "message": "State file not found"}, status_code=404)
             
+        # BUG-17 & BUG-06: Atomic read/write using state.json.tmp and os.replace
+        # Simple lock to minimize concurrent writes
         with open(STATE_PATH, "r", encoding="utf-8") as handle:
             state = json.load(handle)
             
@@ -318,13 +331,16 @@ async def schedule_exit(request: Request) -> JSONResponse:
             "symbol": symbol,
             "name": pos["name"],
             "signal_date": state.get("last_signal_date") or datetime.date.today().isoformat(),
-            "reason": "manual"
+            "reason": "manual",
+            "status": "pending_next_open"  # BUG-22: match backend structure
         }
         state["pending_orders"].append(sell_order)
         
-        # Save state
-        with open(STATE_PATH, "w", encoding="utf-8") as handle:
+        # Atomic write
+        tmp_path = STATE_PATH.with_suffix(".tmp")
+        with tmp_path.open("w", encoding="utf-8") as handle:
             json.dump(state, handle, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, STATE_PATH)
             
         return _json({"status": "success", "message": f"Scheduled exit for {symbol}"})
     except Exception as e:

@@ -7,11 +7,15 @@ import pandas as pd
 def _higher_better(value: float | None, low: float, high: float) -> float:
     if value is None or pd.isna(value):
         return np.nan
+    if high == low:
+        return np.nan
     return float(np.clip((value - low) / (high - low), 0, 1))
 
 
 def _lower_better(value: float | None, high: float, low: float) -> float:
     if value is None or pd.isna(value):
+        return np.nan
+    if high == low:
         return np.nan
     return float(np.clip((high - value) / (high - low), 0, 1))
 
@@ -19,6 +23,8 @@ def _lower_better(value: float | None, high: float, low: float) -> float:
 def _middle_better(value: float | None, low: float, target: float, high: float) -> float:
     if value is None or pd.isna(value) or value <= low or value >= high:
         return np.nan if value is None or pd.isna(value) else 0.0
+    if target == low or high == target:
+        return np.nan
     if value <= target:
         return float(np.clip((value - low) / (target - low), 0, 1))
     return float(np.clip((high - value) / (high - target), 0, 1))
@@ -51,24 +57,37 @@ def passes_fundamental_filters(row: pd.Series | None, filters: dict) -> bool:
     """Checks if a stock passes hard fundamental criteria."""
     if row is None:
         return False
+        
+    def ge(v, thresh):
+        if v is None or pd.isna(v): return False
+        return float(v) >= float(thresh)
+    
+    def gt(v, thresh):
+        if v is None or pd.isna(v): return False
+        return float(v) > float(thresh)
+
+    def le(v, thresh):
+        if v is None or pd.isna(v): return False
+        return float(v) <= float(thresh)
+
     if not pd.isna(row.get("eva_like_score", np.nan)):
         checks = [
-            row.get("eva_like_score") >= filters.get("min_eva_like_score", filters["min_fundamental_score"]),
-            row.get("roe") >= filters["min_roe"],
-            row.get("eps") > filters["min_eps"],
-            row.get("debt_to_equity") <= filters["max_debt_to_equity"],
+            ge(row.get("eva_like_score"), filters.get("min_eva_like_score", filters["min_fundamental_score"])),
+            ge(row.get("roe"), filters["min_roe"]),
+            gt(row.get("eps"), filters["min_eps"]),
+            le(row.get("debt_to_equity"), filters["max_debt_to_equity"]),
         ]
-        return all(False if pd.isna(val) else bool(val) for val in checks)
+        return all(checks)
 
     checks = [
-        row.get("roe") >= filters["min_roe"],
-        row.get("revenue_growth") >= filters["min_revenue_growth"],
-        row.get("eps") > filters["min_eps"],
-        row.get("debt_to_equity") <= filters["max_debt_to_equity"],
-        filters["min_pe"] < row.get("pe") <= filters["max_pe"],
-        filters["min_pb"] < row.get("pb") <= filters["max_pb"],
+        ge(row.get("roe"), filters["min_roe"]),
+        ge(row.get("revenue_growth"), filters["min_revenue_growth"]),
+        gt(row.get("eps"), filters["min_eps"]),
+        le(row.get("debt_to_equity"), filters["max_debt_to_equity"]),
+        gt(row.get("pe"), filters["min_pe"]) and le(row.get("pe"), filters["max_pe"]),
+        gt(row.get("pb"), filters["min_pb"]) and le(row.get("pb"), filters["max_pb"]),
     ]
-    return all(False if pd.isna(val) else bool(val) for val in checks)
+    return all(checks)
 
 
 def build_feature_panel(
@@ -111,7 +130,9 @@ def _technical_score(df: pd.DataFrame) -> pd.Series:
     score = pd.Series(0.0, index=df.index)
     score += (1 - df["rs20_rank_pct"]).clip(0, 1) * 30
     score += (1 - df["rs60_rank_pct"]).clip(0, 1) * 25
-    score += ((df["Close"] / df["ma20"]) - 1).clip(0, 0.12) / 0.12 * 10
+    # BUG-27: Prevent division by zero if ma20 is zero
+    ma20_safe = df["ma20"].replace(0, np.nan)
+    score += ((df["Close"] / ma20_safe) - 1).fillna(0).clip(0, 0.12) / 0.12 * 10
     score += (df["ma20"] > df["ma60"]).astype(float) * 10
     score += (df["ma20_slope"] > 0).astype(float) * 10
     score += (1 - ((df["rsi14"] - 61).abs() / 9)).clip(0, 1) * 10
@@ -119,10 +140,16 @@ def _technical_score(df: pd.DataFrame) -> pd.Series:
     return score.clip(0, 100)
 
 
+
 def add_strategy_scores(panel: pd.DataFrame, fundamentals: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Processes fundamentals, merges them, and computes technical, fundamental, and final weights."""
     df = panel.sort_values(["symbol", "date"]).copy()
-    df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None).dt.as_unit("ns")
+    
+    # BUG-25: Guard dt.tz_localize(None) against already tz-naive datetimes
+    df_dt = pd.to_datetime(df["date"])
+    if df_dt.dt.tz is not None:
+        df_dt = df_dt.dt.tz_localize(None)
+    df["date"] = df_dt.dt.as_unit("ns")
 
     use_fundamentals = config.get("use_fundamentals", True)
     if not use_fundamentals or fundamentals.empty:
@@ -130,7 +157,10 @@ def add_strategy_scores(panel: pd.DataFrame, fundamentals: pd.DataFrame, config:
         df["fundamental_pass"] = True
     else:
         fund = fundamentals.copy().sort_values(["symbol", "as_of_date"])
-        fund["as_of_date"] = pd.to_datetime(fund["as_of_date"]).dt.tz_localize(None).dt.as_unit("ns")
+        fund_dt = pd.to_datetime(fund["as_of_date"])
+        if fund_dt.dt.tz is not None:
+            fund_dt = fund_dt.dt.tz_localize(None)
+        fund["as_of_date"] = fund_dt.dt.as_unit("ns")
         fund["fundamental_score"] = fund.apply(fundamental_score, axis=1)
         fund["fundamental_pass"] = fund.apply(
             lambda r: passes_fundamental_filters(r, config.get("fundamental_filters", {})),
@@ -207,6 +237,9 @@ def entry_candidates(panel: pd.DataFrame, date: pd.Timestamp, config: dict) -> p
             rs20_rank = day["ret20"].where(univ_mask).rank(ascending=False, pct=True)
             rs60_rank = day["ret60"].where(univ_mask).rank(ascending=False, pct=True)
             rank_count = pool_count
+        else:
+            # BUG-26: Empty fundamental universe pool must yield no candidates
+            return day.head(0)
 
     rs20_cutoff = max(entry["rs20_top_pct"], 1 / rank_count)
     rs60_cutoff = max(entry["rs60_top_pct"], 1 / rank_count)

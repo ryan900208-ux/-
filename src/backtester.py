@@ -62,7 +62,7 @@ def run_backtest(
                 cash_in = proceeds - fee - tax
                 cash += cash_in
 
-                pnl = cash_in - (pos.shares * pos.entry_price)
+                pnl = cash_in - (pos.shares * pos.entry_price * (1 + config["commission_rate"]))
                 trades.append(
                     {
                         "symbol": symbol,
@@ -81,13 +81,15 @@ def run_backtest(
 
                 if exit_reason == "stop_loss":
                     cooldown_until[symbol] = date + pd.Timedelta(days=config["cooldown_days_after_stop"])
-                del positions[symbol]
+                    del positions[symbol]
+                else:
+                    del positions[symbol]
 
         # 2. Process Entries
         free_slots = config["max_positions"] - len(positions)
         if free_slots > 0:
             candidates = entry_candidates(panel, date, config)
-            candidates = candidates[~candidates["symbol"].isin(positions)]
+            candidates = candidates[~candidates["symbol"].isin(set(positions.keys()))]
             candidates = candidates[
                 candidates["symbol"].map(lambda sym: cooldown_until.get(sym, pd.Timestamp.min) <= date)
             ]
@@ -140,6 +142,23 @@ def run_backtest(
             }
         )
 
+    # 4. Snapshot Daily Equity for the very last date (BUG-36 fix)
+    if dates:
+        last_date = dates[-1]
+        market_val = 0.0
+        for symbol, pos in positions.items():
+            close = _last_close(data[symbol], last_date)
+            if not pd.isna(close):
+                market_val += pos.shares * close
+        equity_rows.append(
+            {
+                "date": last_date,
+                "cash": cash,
+                "market_value": market_val,
+                "equity": cash + market_val,
+            }
+        )
+
     return pd.DataFrame(equity_rows), pd.DataFrame(trades)
 
 
@@ -174,9 +193,12 @@ def _exit_reason(pos: Position, row: pd.Series, date: pd.Timestamp, config: dict
 
 
 def _next_open(frame: pd.DataFrame, signal_date: pd.Timestamp, next_date: pd.Timestamp) -> float:
-    future = frame[frame.index > signal_date]
+    # BUG-37: Try using exact next_date, fallback to any date after signal_date
+    future = frame[frame.index >= next_date]
     if future.empty:
-        return float("nan")
+        future = frame[frame.index > signal_date]
+        if future.empty:
+            return float("nan")
     return float(future.iloc[0]["Open"])
 
 
@@ -185,3 +207,4 @@ def _last_close(frame: pd.DataFrame, date: pd.Timestamp) -> float:
     if past.empty:
         return float("nan")
     return float(past.iloc[-1]["Close"])
+
