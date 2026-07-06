@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches and logs
+.pytest_cache/
+*.log
+
+# Project-specific cache and output files
+work/price_cache/
+outputs/backtest/
+
+# OS-generated files
+.DS_Store
+Thumbs.db

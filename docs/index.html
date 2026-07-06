@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Momentum Workstation</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error(message, source, lineno, colno);
+      const loadingText = document.querySelector("#loading-overlay p");
+      if (loadingText) {
+        loadingText.innerHTML = `<span class="text-rose-500 font-bold">JS ERROR:</span> ${message}<br><span class="text-slate-500 font-mono text-[10px]">Line ${lineno}:${colno}</span>`;
+      }
+      return false;
+    };
+
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['SFMono-Regular', 'Consolas', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #000000;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Apple glass card styling */
+    .apple-card {
+      background-color: #121214;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      transition: border-color 0.25s ease, background-color 0.25s ease;
+    }
+    .apple-card:hover {
+      border-color: rgba(255, 255, 255, 0.08);
+      background-color: #161619;
+    }
+
+    /* Tab active underline (Apple navigation style) */
+    .nav-link {
+      position: relative;
+      color: #86868b;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+    .nav-link:hover {
+      color: #ffffff;
+    }
+    .nav-link.active {
+      color: #10b981;
+    }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -18px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #10b981;
+      transform: scaleX(1);
+    }
+
+    /* Table row hover styling */
+    .table-row-hover {
+      transition: background-color 0.15s ease;
+    }
+    .table-row-hover:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+    }
+
+    /* Transitions */
+    .fade-in {
+      animation: fadeIn 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Heatmap cell sizes */
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      transition: transform 0.15s ease;
+    }
+    .heatmap-cell:hover {
+      transform: scale(1.15);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-20 md:pb-16 antialiased">
+
+  <!-- Apple Global Header Navigation -->
+  <header class="sticky top-0 z-40 w-full border-b border-white/5 bg-black/85 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl h-12 items-center justify-between px-6">
+      
+      <!-- Left brand title -->
+      <div class="flex items-center gap-2">
+        <span class="text-white font-semibold text-sm tracking-tight">Quantum Momentum</span>
+        <span class="text-[9px] text-slate-500 font-semibold tracking-wider bg-white/5 px-2 py-0.5 rounded-full">v3.2</span>
+      </div>
+
+      <!-- Navigation links (Apple-Style centered bar) -->
+      <nav class="hidden md:flex items-center space-x-8">
+        <div onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link">Dashboard</div>
+        <div onclick="switchTab('portfolio')" id="nav-portfolio" class="nav-link">Portfolio</div>
+        <div onclick="switchTab('strategies')" id="nav-strategies" class="nav-link">Strategies</div>
+        <div onclick="switchTab('charts')" id="nav-charts" class="nav-link">Performance</div>
+        <div onclick="switchTab('report')" id="nav-report" class="nav-link active">* 策略量化報告</div>
+      </nav>
+
+      <!-- Right controls and badges -->
+      <div class="flex items-center gap-3">
+        <button id="btn-audio" onclick="toggleAudio()" class="hidden"></button>
+        <button id="mode-badge" onclick="toggleModeOverride()" class="rounded-full border border-white/10 px-3 py-0.5 text-[9px] font-semibold tracking-wide uppercase transition-all hover:bg-white/5">LOADING</button>
+        <button id="btn-update" onclick="runDailyUpdate()" class="rounded-full bg-white hover:bg-neutral-200 px-4 py-1 text-[10px] font-semibold text-black transition-all active:scale-95 shadow-sm flex items-center gap-1.5">
+          <i data-lucide="loader-2" class="h-3 w-3" id="update-spinner"></i>
+          <span id="update-btn-text">Update</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Apple Premium full-width progress bar -->
+  <div id="update-progress-container" class="hidden w-full h-[2.5px] bg-white/5 overflow-hidden sticky top-12 z-50 animate-pulse">
+    <div id="update-progress-bar" class="h-full bg-emerald-400 transition-all duration-300 ease-out" style="width: 0%"></div>
+  </div>
+
+  <!-- Main content area -->
+  <main class="mx-auto max-w-7xl px-4 md:px-6 pt-4 md:pt-6">
+
+    <!-- Loading Screen -->
+    <div id="loading-overlay" class="flex flex-col items-center justify-center min-h-[55vh] gap-3 max-w-sm mx-auto">
+      <div class="h-4 w-4 border border-white/20 border-t-white rounded-full animate-spin"></div>
+      <p class="text-xs text-slate-400 font-medium">Connecting to API server...</p>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="error-overlay" class="hidden flex-col items-center justify-center min-h-[55vh] gap-3 text-center max-w-md mx-auto">
+      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+        <i data-lucide="alert-circle" class="h-5 w-5"></i>
+      </div>
+      <h3 class="text-sm font-semibold text-white">CONNECTION FAILED</h3>
+      <p class="text-xs text-slate-400 font-sans mt-0.5">Could not reach uvicorn port at http://localhost:8000. Double check if uvicorn server is running.</p>
+      <button onclick="fetchDashboardData()" class="mt-2 rounded-full bg-white hover:bg-neutral-200 px-4 py-1.5 text-[10px] font-semibold text-black transition-all active:scale-95">
+        RETRY
+      </button>
+    </div>
+
+    <!-- Dashboard grids (Switchable tabs) -->
+    <div id="dashboard-grid" class="hidden space-y-6">
+
+      <!-- ==================== TAB 4: 策略量化報告 (REPORT) - 1:1 REPLICATION ==================== -->
+      <div id="tab-report" class="tab-content fade-in grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Column 1 (Left 25%): Key Performance Indicators & Strategy Overview -->
+        <div class="space-y-6 lg:col-span-1">
+          <div class="apple-card p-5">
+            <h4 class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Key Performance Indicators</h4>
+            
+            <!-- Sparkline KPI Grid (2x2) -->
+            <div class="grid grid-cols-2 gap-4">
+              <!-- KPI Card 1: Average Return -->
+              <div class="bg-white/5 rounded-xl p-3 flex flex-col justify-between h-[85px] border border-white/5">
+                <div class="flex justify-between items-center text-[9px] text-slate-400 font-medium">
+                  <span>Average Return</span>
+                  <i data-lucide="trending-up" class="h-3 w-3 text-emerald-400"></i>
+                </div>
+                <div class="text-base font-semibold text-emerald-400 mt-0.5">+18.33%</div>
+                <!-- Sparkline SVG -->
+                <svg class="h-5 w-full mt-1.5 text-emerald-400" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="1.2">
+                  <path d="M0,15 L10,13 L20,16 L30,11 L40,14 L50,9 L60,11 L70,6 L80,8 L90,3 L100,2" />
+                </svg>
+              </div>
+
+              <!-- KPI Card 2: Alpha -->
+              <div class="bg-white/5 rounded-xl p-3 flex flex-col justify-between h-[85px] border border-white/5">
+                <div class="flex justify-between items-center text-[9px] text-slate-400 font-medium">
+                  <span>Alpha</span>
+                  <span class="text-[9px] text-slate-500 font-semibold font-mono">A</span>
+                </div>
+                <div class="text-base font-semibold text-white mt-0.5">1.45</div>
+                <!-- Sparkline SVG -->
+                <svg class="h-5 w-full mt-1.5 text-emerald-400" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="1.2">
+                  <path d="M0,17 L10,15 L20,16 L30,12 L40,15 L50,8 L60,12 L70,10 L80,11 L90,5 L100,3" />
+                </svg>
+              </div>
+
+              <!-- KPI Card 3: Sharpe Ratio -->
+              <div class="bg-white/5 rounded-xl p-3 flex flex-col justify-between h-[85px] border border-white/5">
+                <div class="flex justify-between items-center text-[9px] text-slate-400 font-medium">
+                  <span>Sharpe Ratio</span>
+                  <i data-lucide="shield" class="h-3 w-3 text-slate-500"></i>
+                </div>
+                <div class="text-base font-semibold text-white mt-0.5">2.12</div>
+                <!-- Sparkline SVG -->
+                <svg class="h-5 w-full mt-1.5 text-emerald-400" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="1.2">
+                  <path d="M0,18 L15,16 L30,17 L45,13 L60,12 L75,8 L90,7 L100,2" />
+                </svg>
+              </div>
+
+              <!-- KPI Card 4: Volatility -->
+              <div class="bg-white/5 rounded-xl p-3 flex flex-col justify-between h-[85px] border border-white/5">
+                <div class="flex justify-between items-center text-[9px] text-slate-400 font-medium">
+                  <span>Volatility</span>
+                  <i data-lucide="activity" class="h-3 w-3 text-slate-500"></i>
+                </div>
+                <div class="text-base font-semibold text-white mt-0.5">11.6%</div>
+                <!-- Sparkline SVG -->
+                <svg class="h-5 w-full mt-1.5 text-emerald-400" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="1.2">
+                  <path d="M0,8 L10,13 L20,4 L30,12 L40,2 L50,15 L60,3 L70,9 L80,2 L90,8 L100,3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strategy Overview selection list -->
+          <div class="apple-card p-5">
+            <h4 class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Strategy Overview</h4>
+            <div class="space-y-3">
+              <div class="p-3 border border-emerald-500/25 bg-emerald-500/5 rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500/40 transition-colors">
+                <div>
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> QMo-Alpha (C)
+                  </div>
+                  <div class="text-[9px] text-slate-400 mt-0.5">Quantilum momentum trading factors</div>
+                </div>
+                <i data-lucide="chevron-right" class="h-3.5 w-3.5 text-slate-400"></i>
+              </div>
+              <div class="p-3 border border-white/5 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors cursor-not-allowed">
+                <div>
+                  <div class="text-xs font-bold text-slate-400">QMo-Value (A)</div>
+                  <div class="text-[9px] text-slate-500 mt-0.5">Quantilum fundamental valuation models</div>
+                </div>
+                <i data-lucide="chevron-right" class="h-3.5 w-3.5 text-slate-600"></i>
+              </div>
+              <div class="p-3 border border-white/5 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors cursor-not-allowed">
+                <div>
+                  <div class="text-xs font-bold text-slate-400">QMo-Arbitrage (B)</div>
+                  <div class="text-[9px] text-slate-500 mt-0.5">Quantilum statistical arbitrage engines</div>
+                </div>
+                <i data-lucide="chevron-right" class="h-3.5 w-3.5 text-slate-600"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2 (Middle 50%): Performance Summary & Annual Returns -->
+        <div class="space-y-6 lg:col-span-2">
+          <!-- Performance Summary horizontal cards -->
+          <div class="apple-card p-5">
+            <div class="flex justify-between items-center border-b border-white/5 pb-3">
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                Strategy Analysis Report: <span class="text-emerald-400 font-mono">QMo-Alpha</span>
+              </h3>
+              <span class="text-[10px] text-slate-500">Strategy Analyser: QMo-Alpha</span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6 mt-4">
+              <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+                <span class="text-[9px] text-slate-500 font-semibold block uppercase">Total Return</span>
+                <span id="report-total-return" class="text-xl font-semibold text-emerald-400 mt-1 block">+957.35%</span>
+              </div>
+              <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+                <span class="text-[9px] text-slate-500 font-semibold block uppercase">Net Profit</span>
+                <span id="report-net-profit" class="text-xl font-semibold text-white mt-1 block">+9.57M 元</span>
+              </div>
+              <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+                <span class="text-[9px] text-slate-500 font-semibold block uppercase">Trades Count</span>
+                <span class="text-xl font-semibold text-white mt-1 block">88</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annual Returns Table -->
+          <div class="apple-card p-5">
+            <h4 class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Annual Returns</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs font-mono">
+                <thead>
+                  <tr class="text-slate-500 border-b border-white/5 pb-2 font-medium">
+                    <th class="pb-2">Year</th>
+                    <th class="pb-2 text-emerald-400 text-right">Return (%)</th>
+                    <th class="pb-2 text-right">0050 Benchmark</th>
+                    <th class="pb-2 text-right">Sharpe</th>
+                    <th class="pb-2 text-right">Max DD (%)</th>
+                    <th class="pb-2 text-right">Trades</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 text-slate-300">
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2026<span class="text-[8px] text-slate-500 ml-1">YTD</span></td><td class="py-3 text-emerald-400 font-semibold text-right">+94.0%</td><td class="py-3 text-right">+67.3%</td><td class="py-3 text-right">3.46</td><td class="py-3 text-rose-500 text-right">-12.1%</td><td class="py-3 text-right">1</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2025</td><td class="py-3 text-emerald-400 font-semibold text-right">+109.8%</td><td class="py-3 text-right">+36.8%</td><td class="py-3 text-right">3.29</td><td class="py-3 text-rose-500 text-right">-8.2%</td><td class="py-3 text-right">7</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2024</td><td class="py-3 text-emerald-400 text-right">+13.3%</td><td class="py-3 text-right">+48.6%</td><td class="py-3 text-right">0.66</td><td class="py-3 text-rose-500 text-right">-22.6%</td><td class="py-3 text-right">22</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2023</td><td class="py-3 text-emerald-400 font-semibold text-right">+113.7%</td><td class="py-3 text-right">+27.5%</td><td class="py-3 text-right">2.53</td><td class="py-3 text-rose-500 text-right">-18.0%</td><td class="py-3 text-right">17</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2022</td><td class="py-3 text-rose-500 font-semibold text-right">-10.6%</td><td class="py-3 text-right">-21.2%</td><td class="py-3 text-right">-0.71</td><td class="py-3 text-rose-500 text-right">-12.9%</td><td class="py-3 text-right">13</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2021</td><td class="py-3 text-emerald-400 font-semibold text-right">+27.1%</td><td class="py-3 text-right">+21.9%</td><td class="py-3 text-right">1.09</td><td class="py-3 text-rose-500 text-right">-19.6%</td><td class="py-3 text-right">16</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2020</td><td class="py-3 text-rose-500 text-right">-5.6%</td><td class="py-3 text-right">+30.2%</td><td class="py-3 text-right">-0.27</td><td class="py-3 text-rose-500 text-right">-14.2%</td><td class="py-3 text-right">12</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3 (Right 25%): Equity Area Chart, Drawdown Chart, Heatmap Grid -->
+        <div class="space-y-6 lg:col-span-1">
+          <!-- Equity Area Chart -->
+          <div class="apple-card p-5 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] text-slate-500 font-semibold uppercase">Equity Curve vs. Benchmark</span>
+              <span class="text-[9px] text-slate-400 font-mono">YTD</span>
+            </div>
+            <div class="h-[120px]">
+              <canvas id="miniEquityChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Drawdown Chart -->
+          <div class="apple-card p-5 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] text-slate-500 font-semibold uppercase">Drawdown</span>
+              <i data-lucide="trending-down" class="h-3.5 w-3.5 text-rose-500"></i>
+            </div>
+            <div class="h-[110px]">
+              <canvas id="miniDrawdownChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Monthly Returns Heatmap -->
+          <div class="apple-card p-5">
+            <h4 class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-3">Monthly Returns</h4>
+            <div class="space-y-2">
+              <div class="flex items-center text-[9px] font-mono">
+                <span class="w-8 text-slate-400 font-bold">2025</span>
+                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
+                  <div class="heatmap-cell bg-emerald-500" title="Jan: +5.2%"></div>
+                  <div class="heatmap-cell bg-emerald-600" title="Feb: +2.1%"></div>
+                  <div class="heatmap-cell bg-emerald-500" title="Mar: +4.8%"></div>
+                  <div class="heatmap-cell bg-rose-500" title="Apr: -3.5%"></div>
+                  <div class="heatmap-cell bg-emerald-400" title="May: +8.9%"></div>
+                  <div class="heatmap-cell bg-emerald-500" title="Jun: +5.0%"></div>
+                  <div class="heatmap-cell bg-rose-600" title="Jul: -5.1%"></div>
+                  <div class="heatmap-cell bg-emerald-500" title="Aug: +3.2%"></div>
+                  <div class="heatmap-cell bg-emerald-700" title="Sep: +1.1%"></div>
+                  <div class="heatmap-cell bg-emerald-500" title="Oct: +4.5%"></div>
+                  <div class="heatmap-cell bg-emerald-600" title="Nov: +2.3%"></div>
+                  <div class="heatmap-cell bg-emerald-400" title="Dec: +9.7%"></div>
+                </div>
+              </div>
+              <div class="flex items-center text-[9px] font-mono">
+                <span class="w-8 text-slate-400 font-bold">2024</span>
+                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
+                  <div class="heatmap-cell bg-emerald-600"></div>
+                  <div class="heatmap-cell bg-rose-500"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-rose-600"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-400"></div>
+                  <div class="heatmap-cell bg-slate-800"></div>
+                  <div class="heatmap-cell bg-emerald-600"></div>
+                  <div class="heatmap-cell bg-rose-500"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-700"></div>
+                </div>
+              </div>
+              <div class="flex items-center text-[9px] font-mono">
+                <span class="w-8 text-slate-400 font-bold">2023</span>
+                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
+                  <div class="heatmap-cell bg-emerald-400"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-600"></div>
+                  <div class="heatmap-cell bg-emerald-400"></div>
+                  <div class="heatmap-cell bg-rose-500"></div>
+                  <div class="heatmap-cell bg-rose-700"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-600"></div>
+                  <div class="heatmap-cell bg-emerald-500"></div>
+                  <div class="heatmap-cell bg-emerald-400"></div>
+                  <div class="heatmap-cell bg-emerald-700"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== TAB 0: 部位總覽 (DASHBOARD) ==================== -->
+      <div id="tab-dashboard" class="tab-content hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- KPIs Row for Dashboard overview -->
+        <div class="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="apple-card p-5">
+            <span class="text-[9px] text-slate-500 font-semibold block uppercase">累積總回報</span>
+            <span id="kpi-return" class="text-2xl font-light text-white tracking-tight mt-1.5 block">0.00%</span>
+          </div>
+          <div class="apple-card p-5">
+            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶總權益</span>
+            <span id="kpi-equity" class="text-2xl font-light text-white tracking-tight mt-1.5 block">1,000,000 元</span>
+          </div>
+          <div class="apple-card p-5">
+            <span class="text-[9px] text-slate-500 font-semibold block uppercase">帳戶可用現金</span>
+            <div class="flex justify-between items-baseline mt-1.5">
+              <span id="kpi-cash" class="text-2xl font-light text-white tracking-tight">1,000,000 元</span>
+              <span id="kpi-cash-pct" class="text-[10px] text-slate-400 font-mono">100.0%</span>
+            </div>
+            <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1.5">
+              <div id="kpi-cash-bar" class="h-full bg-white rounded-full" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="apple-card p-5 flex items-center justify-between">
+            <div>
+              <span class="text-[9px] text-slate-500 font-semibold block uppercase">大盤多空 (Regime)</span>
+              <span id="kpi-regime" class="text-2xl font-light text-white uppercase mt-1 block">NEUTRAL</span>
+            </div>
+            <div id="kpi-regime-orb" class="h-2 w-2 rounded-full bg-amber-500"></div>
+          </div>
+        </div>
+
+        <!-- Active Positions table -->
+        <div class="apple-card p-6 lg:col-span-2 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+              <h2 class="text-xs font-bold text-white uppercase tracking-wider">目前持股 (Active Positions)</h2>
+              <span id="dashboard-pos-count" class="rounded-full bg-white/5 px-3 py-0.5 text-[9px] text-slate-300 font-mono font-semibold">0 / 5</span>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="text-slate-500 border-b border-white/5 pb-2 font-medium">
+                    <th class="pb-3">代號 / 名稱</th>
+                    <th class="pb-3">進場日期</th>
+                    <th class="pb-3">股數</th>
+                    <th class="pb-3">買入均價</th>
+                    <th class="pb-3">最新收盤</th>
+                    <th class="pb-3 text-right">浮動損益 (TWD)</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-table-positions" class="divide-y divide-white/5 text-slate-300 font-mono">
+                  <!-- JS Injection -->
+                </tbody>
+              </table>
+              <div id="dashboard-empty-positions" class="hidden text-center py-10 text-slate-500 font-sans text-xs">
+                SYSTEM PORTFOLIO IS EMPTY (CASH 100%)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending orders card -->
+        <div class="apple-card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+              <h2 class="text-xs font-bold text-white uppercase tracking-wider">掛單資訊 (Pending Orders)</h2>
+              <span id="dashboard-pending-count" class="rounded-full bg-white/5 px-2.5 py-0.5 text-[9px] text-slate-300 font-mono font-semibold">0</span>
+            </div>
+
+            <div class="mt-4 space-y-2.5 max-h-[230px] overflow-y-auto pr-1" id="dashboard-list-pending-orders">
+              <!-- JS Injection -->
+            </div>
+            <div id="dashboard-empty-pending" class="hidden flex flex-col items-center justify-center py-10 text-slate-500 font-sans text-xs">
+              <i data-lucide="check" class="h-4 w-4 mb-1 text-slate-600"></i>
+              <span>NO PENDING ORDERS DETECTED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 1: 候選股 (PORTFOLIO) ==================== -->
+      <div id="tab-portfolio" class="tab-content hidden overflow-x-auto">
+        <div class="apple-card p-6">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-white/5 pb-2.5 font-medium">
+                <th class="pb-2.5">股票標的</th>
+                <th class="pb-2.5 text-emerald-400">綜合評分 (Final)</th>
+                <th class="pb-2.5 text-slate-400">技術得分</th>
+                <th class="pb-2.5 text-slate-400">基本指標</th>
+                <th class="pb-2.5">收盤價</th>
+                <th class="pb-2.5">RSI (14)</th>
+                <th class="pb-2.5">20日均量比</th>
+                <th class="pb-2.5 text-right">大盤多空</th>
+              </tr>
+            </thead>
+            <tbody id="portfolio-table-candidates" class="divide-y divide-white/5 text-slate-300 font-mono">
+              <!-- JS Injection -->
+            </tbody>
+          </table>
+          <div id="portfolio-empty-candidates" class="hidden text-center py-10 text-slate-500 font-sans text-xs">
+            NO CANDIDATES MATCHED QUALITY-MOMENTUM RULES TODAY
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: 歷史交易誌 (STRATEGIES) ==================== -->
+      <div id="tab-strategies" class="tab-content hidden overflow-x-auto max-h-[550px] overflow-y-auto">
+        <div class="apple-card p-6">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-white/5 pb-2.5 font-medium">
+                <th class="pb-2.5">標的代號/名稱</th>
+                <th class="pb-2.5">進場日期</th>
+                <th class="pb-2.5">出場日期</th>
+                <th class="pb-2.5">進場均價</th>
+                <th class="pb-2.5">出場均價</th>
+                <th class="pb-2.5">交易股數</th>
+                <th class="pb-2.5">實現損益 (TWD)</th>
+                <th class="pb-2.5 text-center">持有天數</th>
+                <th class="pb-2.5 text-right">出場信號</th>
+              </tr>
+            </thead>
+            <tbody id="strategies-table-trades" class="divide-y divide-white/5 text-slate-300 font-mono">
+              <!-- JS Injection -->
+            </tbody>
+          </table>
+          <div id="strategies-empty-trades" class="hidden text-center py-10 text-slate-500 font-sans text-xs">
+            NO TRADES COMPLETED YET
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: 帳戶成長曲線 (CHARTS) ==================== -->
+      <div id="tab-charts" class="tab-content hidden space-y-6 fade-in">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Card 1: Equity & Cash -->
+          <div class="apple-card p-5 h-[300px] flex flex-col">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-2">帳戶總權益與可用現金 (Equity & Cash)</h3>
+            <div class="flex-1 min-h-0">
+              <canvas id="equityCurveChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Card 2: Cumulative Profit -->
+          <div class="apple-card p-5 h-[300px] flex flex-col">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-2">累積淨利潤走勢 (Cumulative Net Profit)</h3>
+            <div class="flex-1 min-h-0">
+              <canvas id="netProfitChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Holdings past 6 months -->
+        <div class="apple-card p-5 h-[340px] flex flex-col">
+          <div class="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">持有個股歷史走勢 - 過去半年 (Active Holdings Price Trend - Rebased to 100)</h3>
+            <span class="text-[9px] text-slate-500 font-mono">NORMALIZED COMPARISON</span>
+          </div>
+          <div class="flex-1 min-h-0 relative">
+            <canvas id="holdingsTrendChart"></canvas>
+            <div id="empty-holdings-chart" class="hidden absolute inset-0 flex items-center justify-center text-slate-500 font-sans text-xs bg-black/40">
+              NO ACTIVE HOLDINGS IN PORTFOLIO (CASH 100%)
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Collapsible System Log Panel (Clean Apple style) -->
+      <details class="apple-card p-4 transition-all duration-300 group">
+        <summary class="flex items-center justify-between cursor-pointer font-sans text-xs font-bold text-slate-400 select-none uppercase tracking-wider">
+          <div class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            <span>系統執行日誌 (Workstation Console Logs)</span>
+          </div>
+          <span class="text-[9px] text-slate-500 group-open:rotate-180 transform transition-transform">▼</span>
+        </summary>
+        <div class="mt-4 pt-3 border-t border-white/5 font-mono text-[10px] text-emerald-400/80 space-y-1 max-h-[120px] overflow-y-auto pr-2" id="console-logs">
+          <!-- Logs injected here -->
+        </div>
+      </details>
+
+    </div>
+  </main>
+
+  <!-- Apple Minimalist Position Dossier Modal -->
+  <div id="dossier-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="apple-card w-[90%] max-w-sm p-6 relative transform scale-95 transition-transform duration-300">
+      
+      <!-- Close button -->
+      <button onclick="closeDossierModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors">
+        <i data-lucide="x" class="h-4.5 w-4.5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 pb-4 border-b border-white/5">
+        <div class="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white">
+          <i data-lucide="layers" class="h-4.5 w-4.5"></i>
+        </div>
+        <div>
+          <h3 class="text-xs font-bold text-white tracking-widest uppercase">POSITION DOSSIER</h3>
+          <p class="text-[10px] text-slate-500 font-mono tracking-wide" id="dossier-title">SYMBOL: NULL</p>
+        </div>
+      </div>
+
+      <!-- Dossier Fields -->
+      <div class="mt-6 space-y-4 font-mono text-xs text-slate-300">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+            <span class="text-[9px] text-slate-500">SHARES HELD</span>
+            <div class="text-sm font-semibold text-white mt-1" id="dossier-shares">0</div>
+          </div>
+          <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+            <span class="text-[9px] text-slate-500">UNREALIZED RETURN</span>
+            <div class="text-sm font-semibold mt-1" id="dossier-return">0%</div>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 p-4 border border-white/5 rounded-xl bg-white/5 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-500">AVG ENTRY COST:</span>
+            <span id="dossier-cost" class="text-white">0.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">CURRENT VALUATION:</span>
+            <span id="dossier-value" class="text-white">0.00</span>
+          </div>
+          <div class="flex justify-between border-t border-white/5 pt-2">
+            <span class="text-slate-500">STOP LOSS LIMIT (12%):</span>
+            <span id="dossier-stop" class="text-rose-400 font-bold">0.00</span>
+          </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="mt-5 pt-4 border-t border-white/5">
+          <button id="btn-schedule-exit" onclick="scheduleExit()" class="w-full rounded-xl bg-rose-600 hover:bg-rose-700 py-2 text-xs font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-md">
+            <i data-lucide="trending-down" class="h-4 w-4"></i>
+            <span id="btn-schedule-exit-text">計畫明日開盤賣出</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.origin.includes('http') ? window.location.origin : "http://localhost:8000";
+    let chartInstance = null;
+    let miniEquityInstance = null;
+    let miniDrawdownInstance = null;
+    let netProfitChartInstance = null;
+    let holdingsChartInstance = null;
+    let modeOverride = localStorage.getItem("modeOverride") || "auto"; 
+    let isLocalServer = false;
+    let currentDossierSymbol = null;
+    let globalPendingOrders = [];
+
+    // Helper functions for bulletproof defensive DOM editing
+    function safeSetText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    }
+    function safeSetHtml(id, html) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    }
+    function showOverlay(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("hidden");
+    }
+    function hideOverlay(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add("hidden");
+    }
+
+    function determineMode() {
+      if (modeOverride === "local") {
+        isLocalServer = true;
+      } else if (modeOverride === "serverless") {
+        isLocalServer = false;
+      } else {
+        isLocalServer = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      }
+    }
+
+    function toggleModeOverride() {
+      determineMode();
+      if (isLocalServer) {
+        modeOverride = "serverless";
+        localStorage.setItem("modeOverride", "serverless");
+        addFakeLog("[SYS] Switched workspace mode: SERVERLESS CLOUD");
+      } else {
+        modeOverride = "local";
+        localStorage.setItem("modeOverride", "local");
+        addFakeLog("[SYS] Switched workspace mode: LOCAL API");
+      }
+      fetchDashboardData();
+    }
+
+    function toggleAudio() {}
+    function playSound(type) {}
+    function bindInteractiveEffects() {}
+
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      safeSetText("header-clock", timeStr);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const fakeLogTemplates = [
+      "[QUANT] Relative Strength ranks calculated: filter pass rate 85%",
+      "[PORTFOLIO] Rebalancing scanner running: 0 triggers found",
+      "[SYS] Health check OK: DB sync latency 4ms",
+      "[QUANT] EVA Quality pool refreshed: TWSE 50 universe index scanned",
+      "[BACKTEST] Fast-forwarding simulation bars: 1472 ticks cached",
+      "[SYS] Memory usage stable at 42MB"
+    ];
+
+    function addFakeLog(text) {
+      const consoleLogs = document.getElementById("console-logs");
+      if (!consoleLogs) return;
+      const time = new Date().toTimeString().split(' ')[0];
+      const logNode = document.createElement("div");
+      logNode.className = "flex gap-2 px-1 py-0.5 rounded";
+      logNode.innerHTML = `<span class="text-slate-600 font-mono select-none">${time}</span><span class="font-mono text-emerald-400/90">${text}</span>`;
+      consoleLogs.appendChild(logNode);
+      consoleLogs.scrollTop = consoleLogs.scrollHeight;
+    }
+
+    function initFakeConsole(cash, equity, regime) {
+      const consoleLogs = document.getElementById("console-logs");
+      if (!consoleLogs) return;
+      consoleLogs.innerHTML = "";
+      addFakeLog(`[SYS] Quantum Workstation initialized on localhost:8000`);
+      addFakeLog(`[PORTFOLIO] Initial cash: 1,000,000 TWD // Current equity: ${formatCurrency(equity)} TWD`);
+      addFakeLog(`[REGIME] Benchmark 0050 index regime detected: ${regime.toUpperCase()}`);
+      
+      setInterval(() => {
+        const randIndex = Math.floor(Math.random() * fakeLogTemplates.length);
+        let logText = fakeLogTemplates[randIndex];
+        addFakeLog(logText);
+      }, 15000);
+    }
+
+    function parseCSV(text) {
+      if (!text) return [];
+      const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(",");
+      return lines.slice(1).map(line => {
+        const values = line.split(",");
+        const obj = {};
+        headers.forEach((header, index) => {
+          let val = values[index];
+          if (val === undefined) {
+            obj[header] = null;
+          } else {
+            val = val.trim();
+            if (!isNaN(val) && val !== "") {
+              obj[header] = parseFloat(val);
+            } else {
+              obj[header] = val;
+            }
+          }
+        });
+        return obj;
+      });
+    }
+
+    function fetchDashboardData() {
+      determineMode();
+      showOverlay("loading-overlay");
+      hideOverlay("error-overlay");
+      hideOverlay("dashboard-grid");
+
+      const modeBadge = document.getElementById("mode-badge");
+
+      if (isLocalServer) {
+        fetch(`${API_URL}/api/dashboard`)
+          .then(response => {
+            if (!response.ok) throw new Error("API response error");
+            return response.json();
+          })
+          .then(data => {
+            renderDashboard(data);
+            if (modeBadge) {
+              modeBadge.textContent = "LOCAL API";
+              modeBadge.className = "rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-0.5 text-[9px] text-emerald-400 font-bold";
+            }
+            hideOverlay("loading-overlay");
+            showOverlay("dashboard-grid");
+            initFakeConsole(data.cash, data.equity, data.market_regime);
+            lucide.createIcons();
+          })
+          .catch(err => {
+            console.error(err);
+            hideOverlay("loading-overlay");
+            showOverlay("error-overlay");
+          });
+      } else {
+        if (modeBadge) {
+          modeBadge.textContent = "SERVERLESS CLOUD";
+          modeBadge.className = "rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-0.5 text-[9px] text-indigo-400 font-bold";
+        }
+        const updateTextEl = document.getElementById("update-btn-text");
+        if (updateTextEl) updateTextEl.textContent = "Schedule";
+
+        Promise.all([
+          fetch('./outputs/paper_trading/state.json').then(res => {
+            if (!res.ok) throw new Error("State file missing");
+            return res.json();
+          }),
+          fetch('./outputs/paper_trading/trades.csv').then(res => res.text()).catch(() => ""),
+          fetch('./outputs/paper_trading/daily_snapshots.csv').then(res => res.text()).catch(() => ""),
+        ])
+        .then(([state, tradesText, snapshotsText]) => {
+          const trades = parseCSV(tradesText);
+          const snapshots = parseCSV(snapshotsText);
+          const latestDate = state.last_signal_date;
+
+          if (latestDate) {
+            fetch(`./outputs/paper_trading/signals/candidates_${latestDate}.csv`)
+              .then(res => res.text())
+              .then(candText => {
+                const candidates = parseCSV(candText);
+                const regime = candidates.length > 0 ? candidates[0].market_regime : "neutral";
+                assemblePayload(state, trades, snapshots, candidates, regime);
+              })
+              .catch(err => {
+                assemblePayload(state, trades, snapshots, [], "neutral");
+              });
+          } else {
+            assemblePayload(state, trades, snapshots, [], "neutral");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          hideOverlay("loading-overlay");
+          showOverlay("error-overlay");
+        });
+      }
+    }
+
+    function assemblePayload(state, trades, snapshots, candidates, marketRegime) {
+      let total_return_pct = 0.0;
+      let equity = 1000000.0;
+      if (snapshots.length > 0) {
+        const lastSnap = snapshots[snapshots.length - 1];
+        equity = lastSnap.equity;
+        total_return_pct = lastSnap.total_return_pct;
+      } else {
+        total_return_pct = (state.cash / state.initial_cash - 1) * 100;
+      }
+
+      const payload = {
+        "latest_date": state.last_signal_date,
+        "market_regime": marketRegime,
+        "cash": state.cash,
+        "equity": equity,
+        "total_return_pct": total_return_pct,
+        "positions": state.positions || [],
+        "pending_orders": state.pending_orders || [],
+        "candidates": candidates,
+        "trades": trades,
+        "snapshots": snapshots
+      };
+
+      renderDashboard(payload);
+      hideOverlay("loading-overlay");
+      showOverlay("dashboard-grid");
+      initFakeConsole(payload.cash, payload.equity, payload.market_regime);
+      lucide.createIcons();
+    }
+
+    function renderDashboard(data) {
+      globalPendingOrders = data.pending_orders || [];
+      // 1. KPI Cards
+      safeSetText("kpi-return", `${Number(data.total_return_pct).toFixed(2)}%`);
+      safeSetText("kpi-equity", `${formatCurrency(data.equity)} 元`);
+      safeSetText("kpi-cash", `${formatCurrency(data.cash)} 元`);
+
+      const cashPct = (data.cash / data.equity) * 100;
+      const cashBar = document.getElementById("kpi-cash-bar");
+      if (cashBar) cashBar.style.width = `${cashPct}%`;
+      safeSetText("kpi-cash-pct", `${cashPct.toFixed(1)}%`);
+
+      const regime = data.market_regime;
+      const regimeEl = document.getElementById("kpi-regime");
+      const regimeOrb = document.getElementById("kpi-regime-orb");
+      if (regimeEl) {
+        regimeEl.textContent = regime;
+        if (regime === "bull") {
+          regimeEl.className = "text-2xl font-light text-emerald-400 uppercase mt-1 block";
+          if (regimeOrb) regimeOrb.className = "h-2 w-2 rounded-full bg-emerald-500";
+        } else if (regime === "bear") {
+          regimeEl.className = "text-2xl font-light text-rose-500 uppercase mt-1 block";
+          if (regimeOrb) regimeOrb.className = "h-2 w-2 rounded-full bg-rose-500";
+        } else {
+          regimeEl.className = "text-2xl font-light text-white uppercase mt-1 block";
+          if (regimeOrb) regimeOrb.className = "h-2 w-2 rounded-full bg-amber-500";
+        }
+      }
+
+      // 2. Positions Table (Dashboard Tab only)
+      const posTable = document.getElementById("dashboard-table-positions");
+      if (posTable) {
+        posTable.innerHTML = "";
+        safeSetText("dashboard-pos-count", `${data.positions.length} / 5`);
+        if (data.positions.length === 0) {
+          showOverlay("dashboard-empty-positions");
+        } else {
+          hideOverlay("dashboard-empty-positions");
+          data.positions.forEach(pos => {
+            const sign = pos.unrealized_pnl >= 0 ? "+" : "";
+            const colorClass = pos.unrealized_pnl >= 0 ? "text-emerald-400" : "text-rose-400";
+            const dataAttr = encodeURIComponent(JSON.stringify(pos));
+
+             posTable.innerHTML += `
+              <tr class="table-row-hover border-b border-white/5" onclick="openDossierModal('${dataAttr}')">
+                <td class="py-3"><span class="text-white font-semibold font-sans text-xs">${pos.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans font-normal">${pos.name}</span></td>
+                <td class="py-3 font-mono">${pos.entry_date}</td>
+                <td class="py-3 font-mono">${pos.shares}</td>
+                <td class="py-3 font-mono text-slate-400">${Number(pos.entry_price).toFixed(2)}</td>
+                <td class="py-3 font-mono">${Number(pos.close).toFixed(2)}</td>
+                <td class="py-3 font-mono text-right font-semibold ${colorClass}">${sign}${formatCurrency(pos.unrealized_pnl)} (${sign}${Number(pos.unrealized_return_pct).toFixed(2)}%)</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      // 3. Pending Orders List (Dashboard Tab only)
+      const pendingList = document.getElementById("dashboard-list-pending-orders");
+      if (pendingList) {
+        pendingList.innerHTML = "";
+        safeSetText("dashboard-pending-count", data.pending_orders.length);
+
+        if (data.pending_orders.length === 0) {
+          showOverlay("dashboard-empty-pending");
+        } else {
+          hideOverlay("dashboard-empty-pending");
+          data.pending_orders.forEach(order => {
+            const isBuy = order.type === "buy";
+            const borderClass = isBuy ? "border-emerald-500/10 bg-emerald-500/5 text-emerald-400" : "border-rose-500/10 bg-rose-500/5 text-rose-400";
+            const icon = isBuy ? "trending-up" : "trending-down";
+            const desc = isBuy ? "即將開盤買入" : `即將開盤賣出 (${order.reason})`;
+
+            pendingList.innerHTML += `
+              <div class="flex items-center justify-between border rounded-xl p-3 ${borderClass}">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-black/20">
+                    <i data-lucide="${icon}" class="h-4 w-4"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-white font-sans text-xs tracking-tight">${order.symbol} (${order.name})</h4>
+                    <p class="text-[9px] text-slate-400 font-sans mt-0.5">${desc}</p>
+                  </div>
+                </div>
+                <span class="text-[9px] font-mono text-slate-500 font-semibold">${order.signal_date}</span>
+              </div>
+            `;
+          });
+        }
+      }
+
+      // 4. Candidates Table (Portfolio Tab only)
+      const candTable = document.getElementById("portfolio-table-candidates");
+      if (candTable) {
+        candTable.innerHTML = "";
+        if (data.candidates.length === 0) {
+          showOverlay("portfolio-empty-candidates");
+        } else {
+          hideOverlay("portfolio-empty-candidates");
+          data.candidates.forEach(cand => {
+            candTable.innerHTML += `
+              <tr class="table-row-hover border-b border-white/5">
+                <td class="py-3 font-semibold text-white font-sans">${cand.symbol}</td>
+                <td class="py-3 font-bold text-emerald-400 font-mono">${Number(cand.final_score).toFixed(1)}</td>
+                <td class="py-3 text-slate-400 font-mono">${Number(cand.technical_score).toFixed(1)}</td>
+                <td class="py-3 text-slate-400 font-mono">${Number(cand.fundamental_score).toFixed(1)}</td>
+                <td class="py-3 font-mono">${Number(cand.Close || cand.close).toFixed(2)}</td>
+                <td class="py-3 font-mono">${Number(cand.rsi14).toFixed(1)}</td>
+                <td class="py-3 font-mono">${Number(cand.volume_ratio).toFixed(2)}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-bold text-slate-500 font-sans">${cand.market_regime}</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      // 5. Trades History Table (Strategies Tab only)
+      const tradesTable = document.getElementById("strategies-table-trades");
+      if (tradesTable) {
+        tradesTable.innerHTML = "";
+        if (data.trades.length === 0) {
+          showOverlay("strategies-empty-trades");
+        } else {
+          hideOverlay("strategies-empty-trades");
+          [...data.trades].reverse().forEach(trade => {
+            const colorClass = trade.pnl >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold";
+            const sign = trade.pnl >= 0 ? "+" : "";
+            tradesTable.innerHTML += `
+              <tr class="table-row-hover border-b border-white/5">
+                <td class="py-3"><span class="text-white font-semibold font-sans">${trade.symbol}</span><br><span class="text-slate-500 text-[9px] font-sans">${trade.name}</span></td>
+                <td class="py-3 font-mono">${trade.entry_date}</td>
+                <td class="py-3 font-mono">${trade.exit_date}</td>
+                <td class="py-3 font-mono">${Number(trade.entry_price).toFixed(2)}</td>
+                <td class="py-3 font-mono">${Number(trade.exit_price).toFixed(2)}</td>
+                <td class="py-3 text-slate-400 font-mono">${trade.shares}</td>
+                <td class="py-3 font-mono ${colorClass}">${sign}${formatCurrency(trade.pnl)} (${sign}${(Number(trade.return_pct)*100).toFixed(2)}%)</td>
+                <td class="py-3 text-center font-mono">${trade.holding_bars}</td>
+                <td class="py-3 text-right uppercase text-[9px] font-semibold text-slate-500 font-sans">${trade.exit_reason}</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      // 6. Draw Equity Curve Charts
+      drawChart(data.snapshots);
+      drawMiniCharts(data.snapshots);
+      fetchHoldingsHistory();
+    }
+
+    function drawChart(snapshots) {
+      if (snapshots.length === 0) return;
+      
+      // 1. Equity & Cash Chart
+      const ctxEl = document.getElementById("equityCurveChart");
+      if (ctxEl) {
+        const ctx = ctxEl.getContext("2d");
+        const labels = snapshots.map(s => s.date);
+        const equityData = snapshots.map(s => s.equity);
+        const cashData = snapshots.map(s => s.cash);
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: '總權益 (Equity)',
+                data: equityData,
+                borderColor: '#10b981',
+                backgroundColor: 'transparent',
+                fill: false,
+                tension: 0.1,
+                borderWidth: 1.5,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+              },
+              {
+                label: '現金 (Cash)',
+                data: cashData,
+                borderColor: '#48484a',
+                borderDash: [4, 4],
+                fill: false,
+                tension: 0.1,
+                borderWidth: 1,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { size: 9, family: 'Inter' } }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+              },
+              y: {
+                grid: { color: 'rgba(255, 255, 255, 0.02)' },
+                ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Net Profit Chart
+      const profitCtxEl = document.getElementById("netProfitChart");
+      if (profitCtxEl) {
+        const ctx = profitCtxEl.getContext("2d");
+        const labels = snapshots.map(s => s.date);
+        const profitData = snapshots.map(s => s.equity - 1000000);
+
+        if (netProfitChartInstance) {
+          netProfitChartInstance.destroy();
+        }
+
+        const blueGradient = ctx.createLinearGradient(0, 0, 0, 200);
+        blueGradient.addColorStop(0, 'rgba(59, 130, 246, 0.12)');
+        blueGradient.addColorStop(1, 'rgba(59, 130, 246, 0.00)');
+
+        netProfitChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '累積淨利潤 (Net Profit)',
+              data: profitData,
+              borderColor: '#3b82f6',
+              backgroundColor: blueGradient,
+              fill: true,
+              tension: 0.1,
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { size: 9, family: 'Inter' } }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+              },
+              y: {
+                grid: { color: 'rgba(255, 255, 255, 0.02)' },
+                ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function fetchHoldingsHistory() {
+      const url = isLocalServer ? `${API_URL}/api/holdings/history` : './outputs/paper_trading/holdings_history.json';
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const chartEl = document.getElementById("holdingsTrendChart");
+          if (!chartEl) return;
+          
+          if (!data.series || Object.keys(data.series).length === 0) {
+            showOverlay("empty-holdings-chart");
+            chartEl.classList.add("hidden");
+            return;
+          }
+          
+          hideOverlay("empty-holdings-chart");
+          chartEl.classList.remove("hidden");
+          
+          const ctx = chartEl.getContext("2d");
+          if (holdingsChartInstance) {
+            holdingsChartInstance.destroy();
+          }
+          
+          const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#ef4444'];
+          const datasets = Object.keys(data.series).map((symbol, idx) => {
+            return {
+              label: symbol,
+              data: data.series[symbol],
+              borderColor: colors[idx % colors.length],
+              backgroundColor: 'transparent',
+              fill: false,
+              tension: 0.15,
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            };
+          });
+          
+          holdingsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: data.dates,
+              datasets: datasets
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  labels: { color: '#94a3b8', font: { size: 9, family: 'Inter' } }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+                },
+                y: {
+                  grid: { color: 'rgba(255, 255, 255, 0.02)' },
+                  ticks: { color: '#8e8e93', font: { size: 8, family: 'Inter' } }
+                }
+              }
+            }
+          });
+        })
+        .catch(err => {
+          console.error("Failed to load holdings history:", err);
+        });
+    }
+
+    // Mini charts for the 1:1 replica report tab
+    function drawMiniCharts(snapshots) {
+      if (snapshots.length === 0) return;
+      
+      const labels = snapshots.map(s => s.date);
+      
+      // 1. Mini Equity Chart
+      const miniEqCtxEl = document.getElementById("miniEquityChart");
+      if (miniEqCtxEl) {
+        const miniEqCtx = miniEqCtxEl.getContext("2d");
+        if (miniEquityInstance) miniEquityInstance.destroy();
+        
+        const equityData = snapshots.map(s => s.equity);
+        const benchmarkData = snapshots.map(s => s.benchmark || s.equity * 0.85); // fallback if benchmark not in snapshots
+        
+        const greenGradient = miniEqCtx.createLinearGradient(0, 0, 0, 100);
+        greenGradient.addColorStop(0, 'rgba(16, 185, 129, 0.12)');
+        greenGradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+        miniEquityInstance = new Chart(miniEqCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Equity',
+                data: equityData,
+                borderColor: '#10b981',
+                backgroundColor: greenGradient,
+                fill: true,
+                tension: 0.15,
+                borderWidth: 1.5,
+                pointRadius: 0,
+              },
+              {
+                label: 'Benchmark',
+                data: benchmarkData,
+                borderColor: '#48484a',
+                fill: false,
+                tension: 0.1,
+                borderWidth: 1,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: { grid: { display: false }, ticks: { display: false } }
+            }
+          }
+        });
+      }
+
+      // 2. Mini Drawdown Chart
+      const miniDDCtxEl = document.getElementById("miniDrawdownChart");
+      if (miniDDCtxEl) {
+        const miniDDCtx = miniDDCtxEl.getContext("2d");
+        if (miniDrawdownInstance) miniDrawdownInstance.destroy();
+        
+        // Calculate Drawdown array
+        let peak = -Infinity;
+        const ddData = snapshots.map(s => {
+          if (Number(s.equity) > peak) peak = Number(s.equity);
+          return ((Number(s.equity) - peak) / peak) * 100;
+        });
+
+        const redGradient = miniDDCtx.createLinearGradient(0, 0, 0, 100);
+        redGradient.addColorStop(0, 'rgba(244, 63, 94, 0.12)');
+        redGradient.addColorStop(1, 'rgba(244, 63, 94, 0.00)');
+
+        miniDrawdownInstance = new Chart(miniDDCtx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Drawdown',
+              data: ddData,
+              borderColor: '#f43f5e',
+              backgroundColor: redGradient,
+              fill: true,
+              tension: 0.15,
+              borderWidth: 1.2,
+              pointRadius: 0,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { display: false } },
+              y: { grid: { display: false }, ticks: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    function openDossierModal(dataAttr) {
+      const pos = JSON.parse(decodeURIComponent(dataAttr));
+      currentDossierSymbol = pos.symbol;
+
+      const exitBtn = document.getElementById("btn-schedule-exit");
+      const exitBtnText = document.getElementById("btn-schedule-exit-text");
+      
+      const isExitScheduled = globalPendingOrders.some(o => o.symbol === pos.symbol && o.type === "sell");
+      if (exitBtn) {
+        if (isExitScheduled) {
+          exitBtn.disabled = true;
+          exitBtn.className = "w-full rounded-xl bg-neutral-800 border border-white/5 py-2 text-xs font-semibold text-slate-500 cursor-not-allowed flex items-center justify-center gap-1.5";
+          if (exitBtnText) exitBtnText.textContent = "已排定明日賣出 (Exit Scheduled)";
+        } else {
+          exitBtn.disabled = false;
+          exitBtn.className = "w-full rounded-xl bg-rose-600 hover:bg-rose-700 py-2 text-xs font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-md";
+          if (exitBtnText) exitBtnText.textContent = "計畫明日開盤賣出";
+        }
+      }
+
+      safeSetText("dossier-title", `SYMBOL: ${pos.symbol} // ${pos.name}`);
+      safeSetText("dossier-shares", `${pos.shares} 股`);
+
+      const sign = pos.unrealized_pnl >= 0 ? "+" : "";
+      const colorClass = pos.unrealized_pnl >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold";
+
+      const returnEl = document.getElementById("dossier-return");
+      if (returnEl) {
+        returnEl.textContent = `${sign}${Number(pos.unrealized_return_pct).toFixed(2)}%`;
+        returnEl.className = `text-lg font-semibold mt-1 ${colorClass}`;
+      }
+
+      safeSetText("dossier-cost", `${formatCurrency(pos.entry_price)} 元 (${pos.entry_date})`);
+      safeSetText("dossier-value", `${formatCurrency(pos.market_value)} 元`);
+
+      const stopPrice = pos.entry_price * 0.88;
+      safeSetText("dossier-stop", `${stopPrice.toFixed(2)} 元 (現價: ${pos.close.toFixed(2)} 元)`);
+
+      const modal = document.getElementById("dossier-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+          modal.classList.remove("opacity-0");
+          if (modal.firstElementChild) modal.firstElementChild.classList.remove("scale-95");
+        }, 50);
+      }
+
+      lucide.createIcons();
+    }
+
+    function closeDossierModal() {
+      const modal = document.getElementById("dossier-modal");
+      if (modal) {
+        modal.classList.add("opacity-0");
+        if (modal.firstElementChild) modal.firstElementChild.classList.add("scale-95");
+        setTimeout(() => {
+          modal.classList.add("hidden");
+        }, 300);
+      }
+    }
+
+    function scheduleExit() {
+      if (!currentDossierSymbol) return;
+      
+      const btn = document.getElementById("btn-schedule-exit");
+      const btnText = document.getElementById("btn-schedule-exit-text");
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.textContent = "排定中 (Scheduling)...";
+
+      fetch(`${API_URL}/api/orders/exit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol: currentDossierSymbol })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            addFakeLog(`[PORTFOLIO] Scheduled manual exit order for ${currentDossierSymbol} next open.`);
+            closeDossierModal();
+            fetchDashboardData();
+          } else {
+            alert(data.message || "排定出場失敗");
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = "計畫明日開盤賣出";
+          }
+        })
+        .catch(err => {
+          console.error("Failed to schedule exit:", err);
+          alert("排定出場連線錯誤");
+          if (btn) btn.disabled = false;
+          if (btnText) btnText.textContent = "計畫明日開盤賣出";
+        });
+    }
+
+    let updateInterval = null;
+
+    function runDailyUpdate() {
+      if (isLocalServer) {
+        const spinner = document.getElementById("update-spinner");
+        const btn = document.getElementById("btn-update");
+        const btnText = document.getElementById("update-btn-text");
+
+        if (spinner) spinner.classList.add("animate-spin");
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = "UPDATING...";
+
+        fetch(`${API_URL}/api/update`, { method: "POST" })
+          .then(response => {
+            if (!response.ok) throw new Error("API error");
+            return response.json();
+          })
+          .then(res => {
+            addFakeLog("[SYS] Triggered daily update script in background.");
+            pollUpdateStatus();
+          })
+          .catch(err => {
+            console.error(err);
+            alert("啟動更新失敗，請檢查 API 伺服器終端機日誌。");
+            if (spinner) spinner.classList.remove("animate-spin");
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = "Update";
+          });
+      } else {
+        alert("自動更新目前是由 GitHub Actions 排程每日執行 (台北時間 16:15)。\n\n網頁將引導您前往 GitHub Actions 頁面，您可以登入並點擊 'Run workflow' 手動觸發即時更新。");
+        const pathParts = window.location.pathname.split('/');
+        const repoName = pathParts[1] || '';
+        window.open(`https://github.com/${window.location.hostname.split('.')[0]}/${repoName}/actions`, '_blank');
+      }
+    }
+
+    function pollUpdateStatus() {
+      const spinner = document.getElementById("update-spinner");
+      const btn = document.getElementById("btn-update");
+      const btnText = document.getElementById("update-btn-text");
+      const progBar = document.getElementById("update-progress-bar");
+
+      if (updateInterval) clearInterval(updateInterval);
+
+      let lastMessage = "";
+
+      updateInterval = setInterval(() => {
+        fetch(`${API_URL}/api/update/status`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === "running") {
+              showOverlay("update-progress-container");
+              if (spinner) spinner.classList.add("animate-spin");
+              if (btn) btn.disabled = true;
+
+              const progress = data.progress || 10;
+              const secondsLeft = data.seconds_left || 18;
+              
+              if (progBar) progBar.style.width = `${progress}%`;
+              if (btnText) btnText.textContent = `${progress}% (${secondsLeft}s)`;
+              
+              if (data.message && data.message !== lastMessage) {
+                lastMessage = data.message;
+                addFakeLog(`[QUANT] Update: ${data.message}`);
+              }
+            } else if (data.status === "success") {
+              clearInterval(updateInterval);
+              if (progBar) progBar.style.width = "100%";
+              
+              addFakeLog("[SYS] Daily update completed successfully!");
+              setTimeout(() => {
+                hideOverlay("update-progress-container");
+                if (progBar) progBar.style.width = "0%";
+                alert("每日更新成功！掛單與最新收盤價已重新整理。");
+                if (spinner) spinner.classList.remove("animate-spin");
+                if (btn) btn.disabled = false;
+                if (btnText) btnText.textContent = "Update";
+                fetchDashboardData();
+              }, 600);
+            } else if (data.status === "failed") {
+              clearInterval(updateInterval);
+              hideOverlay("update-progress-container");
+              addFakeLog(`[ERROR] Daily update script failed (code ${data.code}).`);
+              alert("執行更新失敗，請檢查 API 伺服器終端機日誌。");
+              if (spinner) spinner.classList.remove("animate-spin");
+              if (btn) btn.disabled = false;
+              if (btnText) btnText.textContent = "Update";
+            }
+          })
+          .catch(err => {
+            console.error("Status polling failed", err);
+          });
+      }, 1500);
+    }
+
+    function switchTab(tabId) {
+      // Manage nav links active styling
+      document.querySelectorAll(".nav-link").forEach(link => {
+        link.classList.remove("active");
+      });
+      
+      // Determine link to activate
+      let linkId = `nav-${tabId}`;
+      const activeLink = document.getElementById(linkId);
+      if (activeLink) activeLink.classList.add("active");
+
+      // Manage mobile nav links active styling
+      document.querySelectorAll(".mobile-nav-link").forEach(link => {
+        link.classList.remove("text-emerald-400");
+        link.classList.add("text-slate-500");
+      });
+      const activeMobileLink = document.getElementById(`mobile-nav-${tabId}`);
+      if (activeMobileLink) {
+        activeMobileLink.classList.remove("text-slate-500");
+        activeMobileLink.classList.add("text-emerald-400");
+      }
+
+      // Hide all tabs
+      document.querySelectorAll(".tab-content").forEach(el => {
+        el.classList.add("hidden");
+      });
+
+      // Show target tab
+      let targetTab = `tab-${tabId}`;
+      const tabEl = document.getElementById(targetTab);
+      if (tabEl) tabEl.classList.remove("hidden");
+
+      if (tabId === "charts") {
+        fetchHoldingsHistory();
+      }
+    }
+
+    function formatCurrency(val) {
+      return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(val);
+    }
+    
+    // Auto boot
+    fetchDashboardData();
+  </script>
+
+  <!-- Mobile Bottom Navigation Bar (App-like native tab bar) -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-lg border-t border-white/5 h-14 flex items-center justify-around px-2 pb-safe shadow-lg">
+    <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="mobile-nav-link flex flex-col items-center justify-center flex-1 h-full py-1 text-slate-500 transition-colors">
+      <i data-lucide="layout-dashboard" class="h-4.5 w-4.5"></i>
+      <span class="text-[9px] font-sans font-medium mt-1">Overview</span>
+    </button>
+    <button onclick="switchTab('portfolio')" id="mobile-nav-portfolio" class="mobile-nav-link flex flex-col items-center justify-center flex-1 h-full py-1 text-slate-500 transition-colors">
+      <i data-lucide="list" class="h-4.5 w-4.5"></i>
+      <span class="text-[9px] font-sans font-medium mt-1">Candidates</span>
+    </button>
+    <button onclick="switchTab('strategies')" id="mobile-nav-strategies" class="mobile-nav-link flex flex-col items-center justify-center flex-1 h-full py-1 text-slate-500 transition-colors">
+      <i data-lucide="history" class="h-4.5 w-4.5"></i>
+      <span class="text-[9px] font-sans font-medium mt-1">Trades</span>
+    </button>
+    <button onclick="switchTab('charts')" id="mobile-nav-charts" class="mobile-nav-link flex flex-col items-center justify-center flex-1 h-full py-1 text-slate-500 transition-colors">
+      <i data-lucide="trending-up" class="h-4.5 w-4.5"></i>
+      <span class="text-[9px] font-sans font-medium mt-1">Performance</span>
+    </button>
+    <button onclick="switchTab('report')" id="mobile-nav-report" class="mobile-nav-link flex flex-col items-center justify-center flex-1 h-full py-1 text-emerald-400 transition-colors">
+      <i data-lucide="award" class="h-4.5 w-4.5"></i>
+      <span class="text-[9px] font-sans font-medium mt-1">Report</span>
+    </button>
+  </div>
+</body>
+</html>
