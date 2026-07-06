@@ -171,9 +171,14 @@
       </div>
       <h3 class="text-sm font-semibold text-white">CONNECTION FAILED</h3>
       <p class="text-xs text-slate-400 font-sans mt-0.5">Could not reach uvicorn port at http://localhost:8000. Double check if uvicorn server is running.</p>
-      <button onclick="fetchDashboardData()" class="mt-2 rounded-full bg-white hover:bg-neutral-200 px-4 py-1.5 text-[10px] font-semibold text-black transition-all active:scale-95">
-        RETRY
-      </button>
+      <div class="flex gap-2 justify-center mt-2">
+        <button onclick="fetchDashboardData()" class="rounded-full bg-white hover:bg-neutral-200 px-4 py-1.5 text-[10px] font-semibold text-black transition-all active:scale-95">
+          RETRY
+        </button>
+        <button onclick="switchToServerlessMode()" class="rounded-full bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-1.5 text-[10px] font-semibold text-white transition-all active:scale-95">
+          切換至雲端模式 (Serverless)
+        </button>
+      </div>
     </div>
 
     <!-- Dashboard grids (Switchable tabs) -->
@@ -664,7 +669,9 @@
   </div>
 
   <script>
-    const API_URL = window.location.origin.includes('http') ? window.location.origin : "http://localhost:8000";
+    const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? window.location.origin 
+      : "http://localhost:8000";
     let chartInstance = null;
     let miniEquityInstance = null;
     let miniDrawdownInstance = null;
@@ -1562,6 +1569,14 @@
 
     function formatCurrency(val) {
       return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(val);
+    }
+
+    function switchToServerlessMode() {
+      modeOverride = "serverless";
+      localStorage.setItem("modeOverride", "serverless");
+      isLocalServer = false;
+      hideOverlay("error-overlay");
+      fetchDashboardData();
     }
     
     // Auto boot
