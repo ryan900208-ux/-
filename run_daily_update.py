@@ -515,6 +515,9 @@ def _append_snapshot(row: dict) -> None:
     if "date" in snapshots_df.columns:
         snapshots_df = snapshots_df[snapshots_df["date"] != row["date"]]
     snapshots_df = pd.concat([snapshots_df, pd.DataFrame([row])], ignore_index=True)
+    # BUG-SORT: Sort daily snapshots by date to keep strict chronological order on charts
+    if "date" in snapshots_df.columns:
+        snapshots_df = snapshots_df.sort_values("date")
     snapshots_df.to_csv(SNAPSHOTS_PATH, index=False, encoding="utf-8-sig")
 
 

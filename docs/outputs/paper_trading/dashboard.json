@@ -370,18 +370,6 @@
       "benchmark": 1031279.65
     },
     {
-      "date": "2026-07-06",
-      "cash": 1478.3360330386786,
-      "market_value": 1023376.5,
-      "equity": 1024854.8360330388,
-      "total_return_pct": 2.485483603303873,
-      "positions": 5,
-      "pending_orders": 1,
-      "candidate_rows": 0,
-      "exit_signals": 1,
-      "benchmark": 1026066.35
-    },
-    {
       "date": "2026-07-03",
       "cash": 1478.3360330386786,
       "market_value": 1005559.0,
@@ -392,6 +380,18 @@
       "candidate_rows": 0,
       "exit_signals": 1,
       "benchmark": 1027014.2
+    },
+    {
+      "date": "2026-07-06",
+      "cash": 1478.3360330386786,
+      "market_value": 1023376.5,
+      "equity": 1024854.8360330388,
+      "total_return_pct": 2.485483603303873,
+      "positions": 5,
+      "pending_orders": 1,
+      "candidate_rows": 0,
+      "exit_signals": 1,
+      "benchmark": 1026066.35
     }
   ]
 }
