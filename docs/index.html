@@ -1256,7 +1256,8 @@
         if (miniEquityInstance) miniEquityInstance.destroy();
         
         const equityData = snapshots.map(s => s.equity);
-        const benchmarkData = snapshots.map(s => s.benchmark || s.equity * 0.85); // fallback if benchmark not in snapshots
+        // Use null for missing/empty benchmark so Chart.js renders a gap instead of a false drop to zero
+        const benchmarkData = snapshots.map(s => (s.benchmark && Number(s.benchmark) > 0) ? Number(s.benchmark) : null);
         
         const greenGradient = miniEqCtx.createLinearGradient(0, 0, 0, 100);
         greenGradient.addColorStop(0, 'rgba(16, 185, 129, 0.12)');
