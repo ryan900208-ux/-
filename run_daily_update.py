@@ -425,8 +425,20 @@ def _snapshot(state: dict, panel: pd.DataFrame, latest_date: pd.Timestamp, candi
     try:
         bench_frame = _read_cached_prices("0050.TW")
         if not bench_frame.empty:
-            # First close available in cache (baseline)
-            first_close = float(bench_frame.iloc[0]["Close"])
+            # First snapshot date
+            first_snap_date = pd.Timestamp("2026-06-01")
+            try:
+                if SNAPSHOTS_PATH.exists():
+                    snapshots_df = pd.read_csv(SNAPSHOTS_PATH)
+                    if not snapshots_df.empty:
+                        first_snap_date = pd.Timestamp(snapshots_df.iloc[0]["date"])
+            except Exception:
+                pass
+            
+            # Find the close on or before the first snapshot date (baseline close)
+            base_past = bench_frame[bench_frame.index.normalize() <= first_snap_date]
+            first_close = float(base_past.iloc[-1]["Close"]) if not base_past.empty else float(bench_frame.iloc[0]["Close"])
+            
             # Close on or before the snapshot date
             snap_ts = pd.Timestamp(latest_date.date())
             past = bench_frame[bench_frame.index.normalize() <= snap_ts]
