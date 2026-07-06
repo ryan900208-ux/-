@@ -294,18 +294,18 @@
               <span class="text-[10px] text-slate-500">Strategy Analyser: QMo-Alpha</span>
             </div>
             
-            <div class="grid grid-cols-3 gap-6 mt-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mt-4">
               <div class="p-3 bg-white/5 rounded-xl border border-white/5">
                 <span class="text-[9px] text-slate-500 font-semibold block uppercase">Total Return</span>
-                <span id="report-total-return" class="text-xl font-semibold text-emerald-400 mt-1 block">+957.35%</span>
+                <span id="report-total-return" class="text-lg sm:text-xl font-semibold text-emerald-400 mt-1 block">+957.35%</span>
               </div>
               <div class="p-3 bg-white/5 rounded-xl border border-white/5">
                 <span class="text-[9px] text-slate-500 font-semibold block uppercase">Net Profit</span>
-                <span id="report-net-profit" class="text-xl font-semibold text-white mt-1 block">+9.57M 元</span>
+                <span id="report-net-profit" class="text-lg sm:text-xl font-semibold text-white mt-1 block">+9.57M 元</span>
               </div>
               <div class="p-3 bg-white/5 rounded-xl border border-white/5">
                 <span class="text-[9px] text-slate-500 font-semibold block uppercase">Trades Count</span>
-                <span class="text-xl font-semibold text-white mt-1 block">88</span>
+                <span id="report-trades-count" class="text-lg sm:text-xl font-semibold text-white mt-1 block">88</span>
               </div>
             </div>
           </div>
@@ -320,19 +320,19 @@
                     <th class="pb-2">Year</th>
                     <th class="pb-2 text-emerald-400 text-right">Return (%)</th>
                     <th class="pb-2 text-right">0050 Benchmark</th>
-                    <th class="pb-2 text-right">Sharpe</th>
+                    <th class="pb-2 text-right hidden sm:table-cell">Sharpe</th>
                     <th class="pb-2 text-right">Max DD (%)</th>
-                    <th class="pb-2 text-right">Trades</th>
+                    <th class="pb-2 text-right hidden sm:table-cell">Trades</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5 text-slate-300">
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2026<span class="text-[8px] text-slate-500 ml-1">YTD</span></td><td class="py-3 text-emerald-400 font-semibold text-right">+94.0%</td><td class="py-3 text-right">+67.3%</td><td class="py-3 text-right">3.46</td><td class="py-3 text-rose-500 text-right">-12.1%</td><td class="py-3 text-right">1</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2025</td><td class="py-3 text-emerald-400 font-semibold text-right">+109.8%</td><td class="py-3 text-right">+36.8%</td><td class="py-3 text-right">3.29</td><td class="py-3 text-rose-500 text-right">-8.2%</td><td class="py-3 text-right">7</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2024</td><td class="py-3 text-emerald-400 text-right">+13.3%</td><td class="py-3 text-right">+48.6%</td><td class="py-3 text-right">0.66</td><td class="py-3 text-rose-500 text-right">-22.6%</td><td class="py-3 text-right">22</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2023</td><td class="py-3 text-emerald-400 font-semibold text-right">+113.7%</td><td class="py-3 text-right">+27.5%</td><td class="py-3 text-right">2.53</td><td class="py-3 text-rose-500 text-right">-18.0%</td><td class="py-3 text-right">17</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2022</td><td class="py-3 text-rose-500 font-semibold text-right">-10.6%</td><td class="py-3 text-right">-21.2%</td><td class="py-3 text-right">-0.71</td><td class="py-3 text-rose-500 text-right">-12.9%</td><td class="py-3 text-right">13</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2021</td><td class="py-3 text-emerald-400 font-semibold text-right">+27.1%</td><td class="py-3 text-right">+21.9%</td><td class="py-3 text-right">1.09</td><td class="py-3 text-rose-500 text-right">-19.6%</td><td class="py-3 text-right">16</td></tr>
-                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2020</td><td class="py-3 text-rose-500 text-right">-5.6%</td><td class="py-3 text-right">+30.2%</td><td class="py-3 text-right">-0.27</td><td class="py-3 text-rose-500 text-right">-14.2%</td><td class="py-3 text-right">12</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2026<span class="text-[8px] text-slate-500 ml-1">YTD</span></td><td class="py-3 text-emerald-400 font-semibold text-right">+94.0%</td><td class="py-3 text-right">+67.3%</td><td class="py-3 text-right hidden sm:table-cell">3.46</td><td class="py-3 text-rose-500 text-right">-12.1%</td><td class="py-3 text-right hidden sm:table-cell">1</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2025</td><td class="py-3 text-emerald-400 font-semibold text-right">+109.8%</td><td class="py-3 text-right">+36.8%</td><td class="py-3 text-right hidden sm:table-cell">3.29</td><td class="py-3 text-rose-500 text-right">-8.2%</td><td class="py-3 text-right hidden sm:table-cell">7</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2024</td><td class="py-3 text-emerald-400 text-right">+13.3%</td><td class="py-3 text-right">+48.6%</td><td class="py-3 text-right hidden sm:table-cell">0.66</td><td class="py-3 text-rose-500 text-right">-22.6%</td><td class="py-3 text-right hidden sm:table-cell">22</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2023</td><td class="py-3 text-emerald-400 font-semibold text-right">+113.7%</td><td class="py-3 text-right">+27.5%</td><td class="py-3 text-right hidden sm:table-cell">2.53</td><td class="py-3 text-rose-500 text-right">-18.0%</td><td class="py-3 text-right hidden sm:table-cell">17</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2022</td><td class="py-3 text-rose-500 font-semibold text-right">-10.6%</td><td class="py-3 text-right">-21.2%</td><td class="py-3 text-right hidden sm:table-cell">-0.71</td><td class="py-3 text-rose-500 text-right">-12.9%</td><td class="py-3 text-right hidden sm:table-cell">13</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2021</td><td class="py-3 text-emerald-400 font-semibold text-right">+27.1%</td><td class="py-3 text-right">+21.9%</td><td class="py-3 text-right hidden sm:table-cell">1.09</td><td class="py-3 text-rose-500 text-right">-19.6%</td><td class="py-3 text-right hidden sm:table-cell">16</td></tr>
+                  <tr class="hover:bg-white/5 transition-colors"><td class="py-3 font-semibold">2020</td><td class="py-3 text-rose-500 text-right">-5.6%</td><td class="py-3 text-right">+30.2%</td><td class="py-3 text-right hidden sm:table-cell">-0.27</td><td class="py-3 text-rose-500 text-right">-14.2%</td><td class="py-3 text-right hidden sm:table-cell">12</td></tr>
                 </tbody>
               </table>
             </div>
