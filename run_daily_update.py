@@ -493,7 +493,7 @@ def _generate_static_json_payloads(state: dict, latest_date: pd.Timestamp, snaps
             "snapshots": snapshots
         }
         
-        dashboard_path = ROOT / "outputs" / "paper_trading" / "dashboard.json"
+        dashboard_path = ROOT / "docs" / "outputs" / "paper_trading" / "dashboard.json"
         with open(dashboard_path, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, ensure_ascii=False, indent=2)
         print(f"Pre-compiled static dashboard payload written to {dashboard_path.name}")
@@ -546,7 +546,7 @@ def _generate_static_json_payloads(state: dict, latest_date: pd.Timestamp, snaps
                 "series": normalized_series
             }
             
-        history_path = ROOT / "outputs" / "paper_trading" / "holdings_history.json"
+        history_path = ROOT / "docs" / "outputs" / "paper_trading" / "holdings_history.json"
         with open(history_path, "w", encoding="utf-8") as handle:
             json.dump(holdings_history, handle, ensure_ascii=False, indent=2)
         print(f"Pre-compiled static holdings history payload written to {history_path.name}")
