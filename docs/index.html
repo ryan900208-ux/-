@@ -832,8 +832,8 @@
             if (!res.ok) throw new Error("State file missing");
             return res.json();
           }),
-          fetch('./outputs/paper_trading/trades.csv').then(res => res.text()).catch(() => ""),
-          fetch('./outputs/paper_trading/daily_snapshots.csv').then(res => res.text()).catch(() => ""),
+          fetch('./outputs/paper_trading/trades.csv').then(res => res.ok ? res.text() : "").catch(() => ""),
+          fetch('./outputs/paper_trading/daily_snapshots.csv').then(res => res.ok ? res.text() : "").catch(() => ""),
         ])
         .then(([state, tradesText, snapshotsText]) => {
           const trades = parseCSV(tradesText);
