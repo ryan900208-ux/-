@@ -1,9 +1,9 @@
 {
   "model_version": "Quality Momentum Optimized",
   "initial_cash": 1000000.0,
-  "cash": 1478.3360330386786,
+  "cash": 172755.35610200118,
   "start_date": "2026-07-03",
-  "last_signal_date": "2026-07-06",
+  "last_signal_date": "2026-07-08",
   "positions": [
     {
       "symbol": "2408.TW",
@@ -13,12 +13,12 @@
       "entry_date": "2026-07-01",
       "entry_price": 455.0,
       "entry_cost": 199745.0,
-      "holding_bars": 6,
-      "close": 409.5,
-      "market_value": 179770.5,
-      "unrealized_pnl": -19974.5,
-      "unrealized_return_pct": -9.999999999999998,
-      "last_bar_date": "2026-07-03"
+      "holding_bars": 7,
+      "close": 396.0,
+      "market_value": 173844.0,
+      "unrealized_pnl": -25901.0,
+      "unrealized_return_pct": -12.967032967032965,
+      "last_bar_date": "2026-07-08"
     },
     {
       "symbol": "2344.TW",
@@ -28,12 +28,12 @@
       "entry_date": "2026-07-01",
       "entry_price": 207.0,
       "entry_cost": 199962.0,
-      "holding_bars": 6,
-      "close": 184.5,
-      "market_value": 178227.0,
-      "unrealized_pnl": -21735.0,
-      "unrealized_return_pct": -10.869565217391308,
-      "last_bar_date": "2026-07-03"
+      "holding_bars": 7,
+      "close": 168.5,
+      "market_value": 162771.0,
+      "unrealized_pnl": -37191.0,
+      "unrealized_return_pct": -18.599033816425127,
+      "last_bar_date": "2026-07-08"
     },
     {
       "symbol": "6446.TW",
@@ -43,27 +43,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 18,
-      "close": 1395.0,
-      "market_value": 290160.0,
-      "unrealized_pnl": 90480.0,
-      "unrealized_return_pct": 45.3125,
-      "last_bar_date": "2026-07-03"
-    },
-    {
-      "symbol": "3006.TW",
-      "name": "晶豪科",
-      "shares": 781,
-      "entry_signal_date": "2026-06-03",
-      "entry_date": "2026-06-04",
-      "entry_price": 255.79342377331795,
-      "entry_cost": 199774.66396696132,
-      "holding_bars": 24,
-      "close": 211.5,
-      "market_value": 165181.5,
-      "unrealized_pnl": -34593.16396696132,
-      "unrealized_return_pct": -17.316091680515765,
-      "last_bar_date": "2026-07-03"
+      "holding_bars": 19,
+      "close": 1377.78564453125,
+      "market_value": 286579.4140625,
+      "unrealized_pnl": 86899.4140625,
+      "unrealized_return_pct": 43.519337972005204,
+      "last_bar_date": "2026-07-08"
     },
     {
       "symbol": "7769.TW",
@@ -73,21 +58,45 @@
       "entry_date": "2026-06-02",
       "entry_price": 7120.0,
       "entry_cost": 199360.0,
-      "holding_bars": 26,
-      "close": 6865.0,
-      "market_value": 192220.0,
-      "unrealized_pnl": -7140.0,
-      "unrealized_return_pct": -3.5814606741572996,
-      "last_bar_date": "2026-07-03"
+      "holding_bars": 27,
+      "close": 6055.0,
+      "market_value": 169540.0,
+      "unrealized_pnl": -29820.0,
+      "unrealized_return_pct": -14.95786516853933,
+      "last_bar_date": "2026-07-08"
     }
   ],
   "pending_orders": [
     {
       "type": "sell",
-      "symbol": "3006.TW",
-      "name": "晶豪科",
-      "signal_date": "2026-07-06",
-      "reason": "manual"
+      "symbol": "2408.TW",
+      "name": "南亞科",
+      "signal_date": "2026-07-08",
+      "reason": "stop_loss",
+      "status": "pending_next_open"
+    },
+    {
+      "type": "sell",
+      "symbol": "2344.TW",
+      "name": "華邦電",
+      "signal_date": "2026-07-08",
+      "reason": "stop_loss",
+      "status": "pending_next_open"
+    },
+    {
+      "type": "sell",
+      "symbol": "7769.TW",
+      "name": "鴻勁",
+      "signal_date": "2026-07-08",
+      "reason": "stop_loss",
+      "status": "pending_next_open"
+    },
+    {
+      "type": "buy",
+      "symbol": "7610.TW",
+      "name": "",
+      "signal_date": "2026-07-08",
+      "status": "pending_next_open"
     }
   ]
 }
