@@ -1,40 +1,10 @@
 {
   "model_version": "Quality Momentum Optimized",
   "initial_cash": 1000000.0,
-  "cash": 172755.35610200118,
+  "cash": 506550.6640139761,
   "start_date": "2026-07-03",
-  "last_signal_date": "2026-07-08",
+  "last_signal_date": "2026-07-09",
   "positions": [
-    {
-      "symbol": "2408.TW",
-      "name": "南亞科",
-      "shares": 439,
-      "entry_signal_date": "2026-06-30",
-      "entry_date": "2026-07-01",
-      "entry_price": 455.0,
-      "entry_cost": 199745.0,
-      "holding_bars": 7,
-      "close": 396.0,
-      "market_value": 173844.0,
-      "unrealized_pnl": -25901.0,
-      "unrealized_return_pct": -12.967032967032965,
-      "last_bar_date": "2026-07-08"
-    },
-    {
-      "symbol": "2344.TW",
-      "name": "華邦電",
-      "shares": 966,
-      "entry_signal_date": "2026-06-30",
-      "entry_date": "2026-07-01",
-      "entry_price": 207.0,
-      "entry_cost": 199962.0,
-      "holding_bars": 7,
-      "close": 168.5,
-      "market_value": 162771.0,
-      "unrealized_pnl": -37191.0,
-      "unrealized_return_pct": -18.599033816425127,
-      "last_bar_date": "2026-07-08"
-    },
     {
       "symbol": "6446.TW",
       "name": "藥華藥",
@@ -43,59 +13,35 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 19,
-      "close": 1377.78564453125,
-      "market_value": 286579.4140625,
-      "unrealized_pnl": 86899.4140625,
-      "unrealized_return_pct": 43.519337972005204,
-      "last_bar_date": "2026-07-08"
+      "holding_bars": 20,
+      "close": 1285.0,
+      "market_value": 267280.0,
+      "unrealized_pnl": 67600.0,
+      "unrealized_return_pct": 33.85416666666667,
+      "last_bar_date": "2026-07-09"
     },
     {
-      "symbol": "7769.TW",
-      "name": "鴻勁",
-      "shares": 28,
-      "entry_signal_date": "2026-06-01",
-      "entry_date": "2026-06-02",
-      "entry_price": 7120.0,
-      "entry_cost": 199360.0,
-      "holding_bars": 27,
-      "close": 6055.0,
-      "market_value": 169540.0,
-      "unrealized_pnl": -29820.0,
-      "unrealized_return_pct": -14.95786516853933,
-      "last_bar_date": "2026-07-08"
+      "symbol": "7610.TW",
+      "name": "",
+      "shares": 71,
+      "entry_signal_date": "2026-07-08",
+      "entry_date": "2026-07-09",
+      "entry_price": 2702.7,
+      "entry_cost": 192165.1456725,
+      "holding_bars": 1,
+      "last_bar_date": "2026-07-09",
+      "close": 2650.0,
+      "market_value": 188150.0,
+      "unrealized_pnl": -4015.145672499988,
+      "unrealized_return_pct": -1.9499019499019443
     }
   ],
   "pending_orders": [
     {
-      "type": "sell",
-      "symbol": "2408.TW",
-      "name": "南亞科",
-      "signal_date": "2026-07-08",
-      "reason": "stop_loss",
-      "status": "pending_next_open"
-    },
-    {
-      "type": "sell",
-      "symbol": "2344.TW",
-      "name": "華邦電",
-      "signal_date": "2026-07-08",
-      "reason": "stop_loss",
-      "status": "pending_next_open"
-    },
-    {
-      "type": "sell",
-      "symbol": "7769.TW",
-      "name": "鴻勁",
-      "signal_date": "2026-07-08",
-      "reason": "stop_loss",
-      "status": "pending_next_open"
-    },
-    {
       "type": "buy",
-      "symbol": "7610.TW",
+      "symbol": "2059.TW",
       "name": "",
-      "signal_date": "2026-07-08",
+      "signal_date": "2026-07-09",
       "status": "pending_next_open"
     }
   ]
