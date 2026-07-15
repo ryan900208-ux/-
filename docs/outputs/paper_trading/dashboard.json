@@ -119,7 +119,68 @@
       "fundamental_rank": 13.0
     }
   ],
-  "trades": [],
+  "trades": [
+    {
+      "symbol": "3006.TW",
+      "name": "晶豪科",
+      "entry_signal_date": "2026-06-03",
+      "entry_date": "2026-06-04",
+      "exit_signal_date": "2026-07-08",
+      "exit_date": "2026-07-09",
+      "entry_price": 255.79342377331795,
+      "exit_price": 219.0,
+      "shares": 781,
+      "pnl": -29662.79,
+      "return_pct": -0.14384,
+      "holding_bars": 24,
+      "exit_reason": "stop_loss"
+    },
+    {
+      "symbol": "2408.TW",
+      "name": "南亞科",
+      "entry_signal_date": "2026-06-30",
+      "entry_date": "2026-07-01",
+      "exit_signal_date": "2026-07-09",
+      "exit_date": "2026-07-10",
+      "entry_price": 455.0,
+      "exit_price": 435.5,
+      "shares": 439,
+      "pnl": -9596.83,
+      "return_pct": -0.042857,
+      "holding_bars": 6,
+      "exit_reason": "stop_loss"
+    },
+    {
+      "symbol": "2344.TW",
+      "name": "華邦電",
+      "entry_signal_date": "2026-06-30",
+      "entry_date": "2026-07-01",
+      "exit_signal_date": "2026-07-09",
+      "exit_date": "2026-07-10",
+      "entry_price": 207.0,
+      "exit_price": 176.5,
+      "shares": 966,
+      "pnl": -30387.2,
+      "return_pct": -0.147343,
+      "holding_bars": 6,
+      "exit_reason": "stop_loss"
+    },
+    {
+      "symbol": "7769.TW",
+      "name": "鴻勁",
+      "entry_signal_date": "2026-06-01",
+      "entry_date": "2026-06-02",
+      "exit_signal_date": "2026-07-09",
+      "exit_date": "2026-07-10",
+      "entry_price": 7120.0,
+      "exit_price": 6660.0,
+      "shares": 28,
+      "pnl": -13890.83,
+      "return_pct": -0.064607,
+      "holding_bars": 26,
+      "exit_reason": "stop_loss"
+    }
+  ],
   "snapshots": [
     {
       "date": "2026-06-01",
