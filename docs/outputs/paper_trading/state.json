@@ -3,7 +3,7 @@
   "initial_cash": 1000000.0,
   "cash": 324610.2678764761,
   "start_date": "2026-07-03",
-  "last_signal_date": "2026-07-15",
+  "last_signal_date": "2026-07-14",
   "positions": [
     {
       "symbol": "6446.TW",
@@ -13,23 +13,23 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 23,
-      "close": 1320.0,
-      "market_value": 274560.0,
-      "unrealized_pnl": 74880.0,
-      "unrealized_return_pct": 37.5,
-      "last_bar_date": "2026-07-15"
+      "holding_bars": 24,
+      "close": 1200.0,
+      "market_value": 249600.0,
+      "unrealized_pnl": 49920.0,
+      "unrealized_return_pct": 25.0,
+      "last_bar_date": "2026-07-14"
     },
     {
       "symbol": "7610.TW",
-      "name": "",
+      "name": "聯友金屬-創",
       "shares": 71,
       "entry_signal_date": "2026-07-08",
       "entry_date": "2026-07-09",
       "entry_price": 2702.7,
       "entry_cost": 192165.1456725,
-      "holding_bars": 4,
-      "last_bar_date": "2026-07-15",
+      "holding_bars": 5,
+      "last_bar_date": "2026-07-14",
       "close": 2430.0,
       "market_value": 172530.0,
       "unrealized_pnl": -19635.145672499988,
@@ -37,18 +37,18 @@
     },
     {
       "symbol": "2059.TW",
-      "name": "",
+      "name": "川湖",
       "shares": 22,
       "entry_signal_date": "2026-07-09",
       "entry_date": "2026-07-10",
       "entry_price": 8258.25,
       "entry_cost": 181940.3961375,
-      "holding_bars": 3,
-      "last_bar_date": "2026-07-15",
-      "close": 8500.0,
-      "market_value": 187000.0,
-      "unrealized_pnl": 5059.603862499993,
-      "unrealized_return_pct": 2.9273756546483787
+      "holding_bars": 4,
+      "last_bar_date": "2026-07-14",
+      "close": 7995.0,
+      "market_value": 175890.0,
+      "unrealized_pnl": -6050.396137500007,
+      "unrealized_return_pct": -3.1877213695395534
     }
   ],
   "pending_orders": []

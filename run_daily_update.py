@@ -380,6 +380,20 @@ def _check_exit_reason(pos: dict, row: pd.Series) -> str | None:
     return None
 
 
+def _load_symbol_names() -> dict[str, str]:
+    try:
+        with open(ROOT / "config.json", "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+        universe_path = ROOT / config["universe_csv"]
+        if universe_path.exists():
+            df = pd.read_csv(universe_path)
+            if "symbol" in df.columns and "name" in df.columns:
+                return dict(zip(df["symbol"].astype(str), df["name"].astype(str)))
+    except Exception:
+        pass
+    return {}
+
+
 def _create_buy_orders(state: dict, candidates: pd.DataFrame, latest_date: pd.Timestamp) -> dict:
     latest_str = str(latest_date.date())
     if state.get("last_signal_date") == latest_str:
@@ -390,13 +404,14 @@ def _create_buy_orders(state: dict, candidates: pd.DataFrame, latest_date: pd.Ti
     slots = MAX_POSITIONS - len(held) - len(pending_buys)
 
     if slots > 0 and not candidates.empty:
+        names_map = _load_symbol_names()
         new_candidates = candidates[~candidates["symbol"].isin(held | pending_buys)].head(slots)
         for row in new_candidates.itertuples(index=False):
             state["pending_orders"].append(
                 {
                     "type": "buy",
                     "symbol": row.symbol,
-                    "name": getattr(row, "name", ""),
+                    "name": names_map.get(row.symbol, ""),
                     "signal_date": latest_str,
                     "status": "pending_next_open",
                 }

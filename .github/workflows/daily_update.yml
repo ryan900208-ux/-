@@ -53,6 +53,7 @@ jobs:
           # Add modified database and output files
           git add docs/outputs/paper_trading/state.json
           git add docs/outputs/paper_trading/daily_snapshots.csv
+          git add docs/outputs/paper_trading/trades.csv
           git add docs/outputs/paper_trading/dashboard.json
           git add docs/outputs/paper_trading/holdings_history.json
           git add docs/outputs/paper_trading/signals/
