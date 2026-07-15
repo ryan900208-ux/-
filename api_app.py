@@ -299,10 +299,12 @@ async def get_holdings_history(request: Request) -> JSONResponse:
 
 
 async def schedule_exit(request: Request) -> JSONResponse:
-    """Schedules a pending sell order for an active position."""
+    """Schedules a pending order (buy or sell) for execution."""
     try:
         body = await request.json()
         symbol = body.get("symbol")
+        order_type = body.get("type", "sell")  # Default to 'sell' for backward compatibility
+        
         if not symbol:
             return _json({"status": "failed", "message": "Symbol is required"}, status_code=400)
             
@@ -314,27 +316,64 @@ async def schedule_exit(request: Request) -> JSONResponse:
         with open(STATE_PATH, "r", encoding="utf-8") as handle:
             state = json.load(handle)
             
-        # Find position
-        pos = next((p for p in state.get("positions", []) if p["symbol"] == symbol), None)
-        if not pos:
-            return _json({"status": "failed", "message": f"Position for {symbol} not found in portfolio"}, status_code=400)
-            
-        # Check if already pending sell
-        already_pending = any(o for o in state.get("pending_orders", []) if o["symbol"] == symbol and o["type"] == "sell")
-        if already_pending:
-            return _json({"status": "failed", "message": f"Sell order for {symbol} is already scheduled"}, status_code=400)
-            
-        # Add sell order
         import datetime
-        sell_order = {
-            "type": "sell",
-            "symbol": symbol,
-            "name": pos["name"],
-            "signal_date": state.get("last_signal_date") or datetime.date.today().isoformat(),
-            "reason": "manual",
-            "status": "pending_next_open"  # BUG-22: match backend structure
-        }
-        state["pending_orders"].append(sell_order)
+        if order_type == "sell":
+            # Find position
+            pos = next((p for p in state.get("positions", []) if p["symbol"] == symbol), None)
+            if not pos:
+                return _json({"status": "failed", "message": f"Position for {symbol} not found in portfolio"}, status_code=400)
+                
+            # Check if already pending sell
+            already_pending = any(o for o in state.get("pending_orders", []) if o["symbol"] == symbol and o["type"] == "sell")
+            if already_pending:
+                return _json({"status": "failed", "message": f"Sell order for {symbol} is already scheduled"}, status_code=400)
+                
+            # Add sell order
+            sell_order = {
+                "type": "sell",
+                "symbol": symbol,
+                "name": pos["name"],
+                "signal_date": state.get("last_signal_date") or datetime.date.today().isoformat(),
+                "reason": "manual",
+                "status": "pending_next_open"  # BUG-22: match backend structure
+            }
+            state["pending_orders"].append(sell_order)
+            msg = f"Scheduled exit for {symbol}"
+        else:
+            # Check if already in positions
+            already_held = any(p for p in state.get("positions", []) if p["symbol"] == symbol)
+            if already_held:
+                return _json({"status": "failed", "message": f"{symbol} is already in positions"}, status_code=400)
+                
+            # Check if already pending buy
+            already_pending = any(o for o in state.get("pending_orders", []) if o["symbol"] == symbol and o["type"] == "buy")
+            if already_pending:
+                return _json({"status": "failed", "message": f"Buy order for {symbol} is already scheduled"}, status_code=400)
+                
+            # Look up name from universe CSV
+            pos_name = ""
+            try:
+                with open(ROOT / "config.json", "r", encoding="utf-8") as hc:
+                    cfg = json.load(hc)
+                upath = ROOT / cfg.get("universe_csv", "data/universe_twse_all.csv")
+                if upath.exists():
+                    df = pd.read_csv(upath)
+                    match = df[df["symbol"] == symbol]
+                    if not match.empty:
+                        pos_name = str(match.iloc[0]["name"])
+            except Exception:
+                pass
+                
+            # Add buy order
+            buy_order = {
+                "type": "buy",
+                "symbol": symbol,
+                "name": pos_name,
+                "signal_date": state.get("last_signal_date") or datetime.date.today().isoformat(),
+                "status": "pending_next_open"
+            }
+            state["pending_orders"].append(buy_order)
+            msg = f"Scheduled buy for {symbol}"
         
         # Atomic write
         tmp_path = STATE_PATH.with_suffix(".tmp")
@@ -342,7 +381,7 @@ async def schedule_exit(request: Request) -> JSONResponse:
             json.dump(state, handle, ensure_ascii=False, indent=2)
         os.replace(tmp_path, STATE_PATH)
             
-        return _json({"status": "success", "message": f"Scheduled exit for {symbol}"})
+        return _json({"status": "success", "message": msg})
     except Exception as e:
         return _json({"status": "failed", "message": str(e)}, status_code=500)
 

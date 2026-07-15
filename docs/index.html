@@ -840,13 +840,14 @@
         const updateTextEl = document.getElementById("update-btn-text");
         if (updateTextEl) updateTextEl.textContent = "Schedule";
 
+        const cacheBuster = `?t=${Date.now()}`;
         Promise.all([
-          fetch('./outputs/paper_trading/state.json').then(res => {
+          fetch(`./outputs/paper_trading/state.json${cacheBuster}`).then(res => {
             if (!res.ok) throw new Error("State file missing");
             return res.json();
           }),
-          fetch('./outputs/paper_trading/trades.csv').then(res => res.ok ? res.text() : "").catch(() => ""),
-          fetch('./outputs/paper_trading/daily_snapshots.csv').then(res => res.ok ? res.text() : "").catch(() => ""),
+          fetch(`./outputs/paper_trading/trades.csv${cacheBuster}`).then(res => res.ok ? res.text() : "").catch(() => ""),
+          fetch(`./outputs/paper_trading/daily_snapshots.csv${cacheBuster}`).then(res => res.ok ? res.text() : "").catch(() => ""),
         ])
         .then(([state, tradesText, snapshotsText]) => {
           const trades = parseCSV(tradesText);
@@ -854,7 +855,7 @@
           const latestDate = state.last_signal_date;
 
           if (latestDate) {
-            fetch(`./outputs/paper_trading/signals/candidates_${latestDate}.csv`)
+            fetch(`./outputs/paper_trading/signals/candidates_${latestDate}.csv${cacheBuster}`)
               .then(res => res.ok ? res.text() : "") // BUG-10: return empty string on 404 instead of HTML error page
               .then(candText => {
                 const candidates = parseCSV(candText);
@@ -1008,9 +1009,13 @@
         } else {
           hideOverlay("portfolio-empty-candidates");
           data.candidates.forEach(cand => {
+            const sym = esc(cand.symbol);
             candTable.innerHTML += `
-              <tr class="table-row-hover border-b border-white/5">
-                <td class="py-3 font-semibold text-white font-sans">${esc(cand.symbol)}</td>
+              <tr class="table-row-hover border-b border-white/5 cursor-pointer" onclick="openBuyConfirmation('${sym}')">
+                <td class="py-3 font-semibold text-white font-sans flex items-center gap-1.5">
+                  <span class="hover:underline">${sym}</span>
+                  <i data-lucide="plus-circle" class="h-3.5 w-3.5 text-emerald-400 opacity-60 hover:opacity-100 transition-opacity" title="手動預約買入"></i>
+                </td>
                 <td class="py-3 font-bold text-emerald-400 font-mono">${Number(cand.final_score).toFixed(1)}</td>
                 <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.technical_score).toFixed(1)}</td>
                 <td class="py-3 text-slate-400 font-mono hidden sm:table-cell">${Number(cand.fundamental_score).toFixed(1)}</td>
@@ -1181,7 +1186,8 @@
     }
 
     function fetchHoldingsHistory() {
-      const url = isLocalServer ? `${API_URL}/api/holdings/history` : './outputs/paper_trading/holdings_history.json';
+      const cacheBuster = `?t=${Date.now()}`;
+      const url = isLocalServer ? `${API_URL}/api/holdings/history` : `./outputs/paper_trading/holdings_history.json${cacheBuster}`;
       fetch(url)
         .then(res => { // BUG-06: check res.ok before parsing
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1627,6 +1633,35 @@
       fetchDashboardData();
     }
     
+    function openBuyConfirmation(symbol) {
+      if (!isLocalServer) {
+        alert("手動預約買入功能僅在 LOCAL API 本地伺服器模式下可用！\n線上 GitHub Pages 模式為全自動排程執行。");
+        return;
+      }
+      if (confirm(`確定要手動預約買入 ${symbol} 嗎？\n這將會在下個交易日開盤時以開盤價（Open）買入。`)) {
+        fetch(`${API_URL}/api/orders/exit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol: symbol, type: "buy" })
+        })
+        .then(res => {
+          if (!res.ok) return res.json().then(e => { throw new Error(e.message || "API Error") });
+          return res.json();
+        })
+        .then(res => {
+          if (res.status === "success") {
+            alert(`已成功預約買入 ${symbol}，請在「掛單資訊」查看！`);
+            fetchDashboardData();
+          } else {
+            alert(`預約失敗：${res.message}`);
+          }
+        })
+        .catch(err => {
+          alert(`發生錯誤：${err.message}`);
+        });
+      }
+    }
+
     // Auto boot
     fetchDashboardData();
   </script>
