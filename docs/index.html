@@ -366,58 +366,8 @@
           <!-- Monthly Returns Heatmap -->
           <div class="apple-card p-5">
             <h4 class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-3">Monthly Returns</h4>
-            <div class="space-y-2">
-              <div class="flex items-center text-[9px] font-mono">
-                <span class="w-8 text-slate-400 font-bold">2025</span>
-                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
-                  <div class="heatmap-cell bg-emerald-500" title="Jan: +5.2%"></div>
-                  <div class="heatmap-cell bg-emerald-600" title="Feb: +2.1%"></div>
-                  <div class="heatmap-cell bg-emerald-500" title="Mar: +4.8%"></div>
-                  <div class="heatmap-cell bg-rose-500" title="Apr: -3.5%"></div>
-                  <div class="heatmap-cell bg-emerald-400" title="May: +8.9%"></div>
-                  <div class="heatmap-cell bg-emerald-500" title="Jun: +5.0%"></div>
-                  <div class="heatmap-cell bg-rose-600" title="Jul: -5.1%"></div>
-                  <div class="heatmap-cell bg-emerald-500" title="Aug: +3.2%"></div>
-                  <div class="heatmap-cell bg-emerald-700" title="Sep: +1.1%"></div>
-                  <div class="heatmap-cell bg-emerald-500" title="Oct: +4.5%"></div>
-                  <div class="heatmap-cell bg-emerald-600" title="Nov: +2.3%"></div>
-                  <div class="heatmap-cell bg-emerald-400" title="Dec: +9.7%"></div>
-                </div>
-              </div>
-              <div class="flex items-center text-[9px] font-mono">
-                <span class="w-8 text-slate-400 font-bold">2024</span>
-                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
-                  <div class="heatmap-cell bg-emerald-600"></div>
-                  <div class="heatmap-cell bg-rose-500"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-rose-600"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-400"></div>
-                  <div class="heatmap-cell bg-slate-800"></div>
-                  <div class="heatmap-cell bg-emerald-600"></div>
-                  <div class="heatmap-cell bg-rose-500"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-700"></div>
-                </div>
-              </div>
-              <div class="flex items-center text-[9px] font-mono">
-                <span class="w-8 text-slate-400 font-bold">2023</span>
-                <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
-                  <div class="heatmap-cell bg-emerald-400"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-600"></div>
-                  <div class="heatmap-cell bg-emerald-400"></div>
-                  <div class="heatmap-cell bg-rose-500"></div>
-                  <div class="heatmap-cell bg-rose-700"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-600"></div>
-                  <div class="heatmap-cell bg-emerald-500"></div>
-                  <div class="heatmap-cell bg-emerald-400"></div>
-                  <div class="heatmap-cell bg-emerald-700"></div>
-                </div>
-              </div>
+            <div class="space-y-2" id="monthly-returns-heatmap-container">
+              <!-- Dynamically populated by JS -->
             </div>
           </div>
         </div>
@@ -899,7 +849,8 @@
         "pending_orders": state.pending_orders || [],
         "candidates": candidates,
         "trades": trades,
-        "snapshots": snapshots
+        "snapshots": snapshots,
+        "initial_cash": state.initial_cash || 1000000.0
       };
 
       renderDashboard(payload);
@@ -1063,6 +1014,9 @@
       drawChart(data.snapshots);
       drawMiniCharts(data.snapshots);
       fetchHoldingsHistory();
+
+      // 7. Render Monthly Returns Heatmap dynamically
+      renderMonthlyReturnsHeatmap(data.snapshots, data.initial_cash || 1000000.0);
     }
 
     function drawChart(snapshots) {
@@ -1660,6 +1614,115 @@
           alert(`發生錯誤：${err.message}`);
         });
       }
+    }
+
+    const BACKTEST_MONTHLY_RETURNS = {
+      2020: [0.0, 0.0, 0.0, 0.0, -1.38, 3.71, 3.12, -1.27, -7.38, 1.71, -0.04, -3.8],
+      2021: [2.13, 3.57, 14.25, 14.37, -3.72, 3.61, 5.33, -8.95, -2.81, -3.57, 2.67, -0.09],
+      2022: [-10.19, 6.27, 2.1, 0.0, 0.0, 0.0, 0.0, 1.61, -10.08, 0.0, 0.0, 0.39],
+      2023: [13.02, 11.29, 4.84, 7.97, 7.08, 0.21, 33.13, -4.17, 5.01, 1.34, -0.03, 3.08],
+      2024: [2.63, -1.22, -12.91, -0.36, -5.09, 10.46, 8.5, 11.09, 2.94, -1.67, -4.57, 5.53],
+      2025: [-1.2, -0.25, 5.15, 0.0, 0.27, 10.65, 5.32, 26.87, 2.39, 18.73, 9.78, 2.35],
+      2026: [13.19, 25.74, -8.7, 37.17, 15.92, null, null, null, null, null, null, null]
+    };
+
+    function renderMonthlyReturnsHeatmap(snapshots, initialCash) {
+      const container = document.getElementById("monthly-returns-heatmap-container");
+      if (!container) return;
+      
+      const baselineCash = initialCash || 1000000.0;
+      
+      // Clone backtest data to avoid mutating original
+      const heatMapData = JSON.parse(JSON.stringify(BACKTEST_MONTHLY_RETURNS));
+      
+      // Calculate live paper trading monthly returns for 2026 (June 2026 onwards)
+      if (snapshots && snapshots.length > 0) {
+        // Sort snapshots by date
+        const sortedSnaps = [...snapshots].map(s => ({
+          date: new Date(s.date),
+          equity: Number(s.equity) || baselineCash
+        })).sort((a, b) => a.date - b.date);
+        
+        // Find last snapshot of each month in 2026
+        const monthlyEnds2026 = {};
+        sortedSnaps.forEach(s => {
+          if (s.date.getFullYear() === 2026) {
+            monthlyEnds2026[s.date.getMonth()] = s.equity;
+          }
+        });
+        
+        // Populate June (index 5) and July (index 6), etc. in 2026
+        for (let m = 5; m < 12; m++) {
+          if (monthlyEnds2026[m] !== undefined) {
+            let startEq = baselineCash;
+            if (m > 5) {
+              // Find the last completed month's end equity in 2026
+              for (let pm = m - 1; pm >= 5; pm--) {
+                if (monthlyEnds2026[pm] !== undefined) {
+                  startEq = monthlyEnds2026[pm];
+                  break;
+                }
+              }
+            }
+            const endEq = monthlyEnds2026[m];
+            const monthlyReturn = ((endEq / startEq) - 1) * 100;
+            heatMapData[2026][m] = Number(monthlyReturn.toFixed(2));
+          }
+        }
+      }
+      
+      const currentYear = new Date().getFullYear();
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      let html = "";
+      
+      // Render from currentYear down to 2023 (or whatever years are in data)
+      const years = Object.keys(heatMapData).map(Number).sort((a, b) => b - a);
+      
+      years.forEach(y => {
+        if (y < 2023) return; // Keep grid density compact as requested
+        
+        html += `
+          <div class="flex items-center text-[9px] font-mono">
+            <span class="w-8 text-slate-400 font-bold">${y}</span>
+            <div class="grid grid-cols-12 gap-1.5 flex-1 ml-2">
+        `;
+        
+        for (let m = 0; m < 12; m++) {
+          const val = heatMapData[y][m];
+          let cellClass = "bg-slate-800"; // default empty
+          let title = `${monthNames[m]} ${y}: No data`;
+          
+          if (val !== null && val !== undefined) {
+            const sign = val >= 0 ? "+" : "";
+            title = `${monthNames[m]} ${y}: ${sign}${val}%`;
+            
+            if (val > 6) {
+              cellClass = "bg-emerald-400";
+            } else if (val > 3) {
+              cellClass = "bg-emerald-500";
+            } else if (val > 0) {
+              cellClass = "bg-emerald-600";
+            } else if (val < -6) {
+              cellClass = "bg-rose-700";
+            } else if (val < -3) {
+              cellClass = "bg-rose-500";
+            } else if (val < 0) {
+              cellClass = "bg-rose-400";
+            } else {
+              cellClass = "bg-slate-800";
+            }
+          }
+          
+          html += `<div class="heatmap-cell ${cellClass}" title="${title}"></div>`;
+        }
+        
+        html += `
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
     }
 
     // Auto boot
