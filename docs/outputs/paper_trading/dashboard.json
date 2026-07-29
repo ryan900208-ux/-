@@ -1,9 +1,9 @@
 {
-  "date": "2026-07-28",
+  "date": "2026-07-29",
   "market_regime": "bull",
-  "cash": 284112.77003602614,
-  "equity": 835355.9631817781,
-  "total_return_pct": -16.464403681822194,
+  "cash": 436012.89645742613,
+  "equity": 817842.8964574261,
+  "total_return_pct": -18.215710354257386,
   "positions": [
     {
       "symbol": "6446.TW",
@@ -13,12 +13,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 33,
-      "close": 1115.0,
-      "market_value": 231920.0,
-      "unrealized_pnl": 32240.0,
-      "unrealized_return_pct": 16.145833333333325,
-      "last_bar_date": "2026-07-28"
+      "holding_bars": 34,
+      "close": 1080.0,
+      "market_value": 224640.0,
+      "unrealized_pnl": 24960.0,
+      "unrealized_return_pct": 12.5,
+      "last_bar_date": "2026-07-29"
     },
     {
       "symbol": "2059.TW",
@@ -28,35 +28,20 @@
       "entry_date": "2026-07-10",
       "entry_price": 8258.25,
       "entry_cost": 181940.3961375,
-      "holding_bars": 13,
-      "last_bar_date": "2026-07-28",
-      "close": 7450.0,
-      "market_value": 163900.0,
-      "unrealized_pnl": -18040.396137500007,
-      "unrealized_return_pct": -9.787182514455239
-    },
-    {
-      "symbol": "2423.TW",
-      "name": "固緯",
-      "shares": 2246,
-      "entry_signal_date": "2026-07-16",
-      "entry_date": "2026-07-17",
-      "entry_price": 81.58149999999999,
-      "entry_cost": 183493.15466982496,
-      "holding_bars": 8,
-      "last_bar_date": "2026-07-28",
-      "close": 69.19999694824219,
-      "market_value": 155423.19314575195,
-      "unrealized_pnl": -28069.961524073005,
-      "unrealized_return_pct": -15.17685143293247
+      "holding_bars": 14,
+      "last_bar_date": "2026-07-29",
+      "close": 7145.0,
+      "market_value": 157190.0,
+      "unrealized_pnl": -24750.396137500007,
+      "unrealized_return_pct": -13.48045893500439
     }
   ],
   "pending_orders": [
     {
       "type": "sell",
-      "symbol": "2423.TW",
-      "name": "固緯",
-      "signal_date": "2026-07-28",
+      "symbol": "2059.TW",
+      "name": "川湖",
+      "signal_date": "2026-07-29",
       "reason": "stop_loss",
       "status": "pending_next_open"
     }
@@ -135,6 +120,21 @@
       "shares": 71,
       "pnl": -49169.48884312497,
       "return_pct": -0.2507492507492507,
+      "holding_bars": 8,
+      "exit_reason": "stop_loss"
+    },
+    {
+      "symbol": "2423.TW",
+      "name": "固緯",
+      "entry_signal_date": "2026-07-16",
+      "entry_date": "2026-07-17",
+      "exit_signal_date": "2026-07-28",
+      "exit_date": "2026-07-29",
+      "entry_price": 81.58149999999999,
+      "exit_price": 68.0,
+      "shares": 2246,
+      "pnl": -31593.02824842496,
+      "return_pct": -0.1664776940850559,
       "holding_bars": 8,
       "exit_reason": "stop_loss"
     }
@@ -559,6 +559,18 @@
       "candidate_rows": 0,
       "exit_signals": 1,
       "benchmark": 926456.69
+    },
+    {
+      "date": "2026-07-29",
+      "cash": 436012.8964574261,
+      "market_value": 381830.0,
+      "equity": 817842.8964574261,
+      "total_return_pct": -18.215710354257386,
+      "positions": 2,
+      "pending_orders": 1,
+      "candidate_rows": 0,
+      "exit_signals": 1,
+      "benchmark": 893556.22
     }
   ]
 }
