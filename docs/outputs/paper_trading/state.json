@@ -13,12 +13,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 43,
-      "close": 1460.0,
-      "market_value": 303680.0,
-      "unrealized_pnl": 104000.0,
-      "unrealized_return_pct": 52.08333333333333,
-      "last_bar_date": "2026-08-11"
+      "holding_bars": 44,
+      "close": 1440.0,
+      "market_value": 299520.0,
+      "unrealized_pnl": 99840.0,
+      "unrealized_return_pct": 50.0,
+      "last_bar_date": "2026-08-12"
     }
   ],
   "pending_orders": []
