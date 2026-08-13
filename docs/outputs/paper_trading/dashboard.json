@@ -1,9 +1,9 @@
 {
-  "date": "2026-08-12",
+  "date": "2026-08-13",
   "market_regime": "neutral",
   "cash": 589943.9540646762,
-  "equity": 889463.9540646762,
-  "total_return_pct": -11.053604593532384,
+  "equity": 890503.9540646762,
+  "total_return_pct": -10.949604593532381,
   "positions": [
     {
       "symbol": "6446.TW",
@@ -13,12 +13,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 44,
-      "close": 1440.0,
-      "market_value": 299520.0,
-      "unrealized_pnl": 99840.0,
-      "unrealized_return_pct": 50.0,
-      "last_bar_date": "2026-08-12"
+      "holding_bars": 45,
+      "close": 1445.0,
+      "market_value": 300560.0,
+      "unrealized_pnl": 100880.0,
+      "unrealized_return_pct": 50.52083333333333,
+      "last_bar_date": "2026-08-13"
     }
   ],
   "pending_orders": [],
@@ -682,6 +682,18 @@
       "candidate_rows": 0,
       "exit_signals": 0,
       "benchmark": 1003224.28
+    },
+    {
+      "date": "2026-08-13",
+      "cash": 589943.9540646762,
+      "market_value": 300560.0,
+      "equity": 890503.9540646762,
+      "total_return_pct": -10.94960459353238,
+      "positions": 1,
+      "pending_orders": 0,
+      "candidate_rows": 0,
+      "exit_signals": 0,
+      "benchmark": 1017528.81
     }
   ]
 }
