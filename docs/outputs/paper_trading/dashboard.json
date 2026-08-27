@@ -1,6 +1,6 @@
 {
   "date": "2026-08-26",
-  "market_regime": "neutral",
+  "market_regime": "nan",
   "cash": 410294.10230830126,
   "equity": 928679.1023083013,
   "total_return_pct": -7.13208976916987,
@@ -816,7 +816,7 @@
       "pending_orders": 0,
       "candidate_rows": 0,
       "exit_signals": 0,
-      "benchmark": 1009899.77
+      "benchmark": 995595.24
     }
   ]
 }
