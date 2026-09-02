@@ -1,7 +1,7 @@
 {
   "model_version": "Quality Momentum Optimized",
   "initial_cash": 1000000.0,
-  "cash": 410294.10230830126,
+  "cash": 236268.86522260128,
   "start_date": "2026-07-03",
   "last_signal_date": "2026-09-01",
   "positions": [
@@ -13,12 +13,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 57,
-      "close": 1310.0,
-      "market_value": 272480.0,
-      "unrealized_pnl": 72800.0,
-      "unrealized_return_pct": 36.45833333333333,
-      "last_bar_date": "2026-09-01"
+      "holding_bars": 58,
+      "close": 1305.0,
+      "market_value": 271440.0,
+      "unrealized_pnl": 71760.0,
+      "unrealized_return_pct": 35.9375,
+      "last_bar_date": "2026-09-02"
     },
     {
       "symbol": "2408.TW",
@@ -28,21 +28,28 @@
       "entry_date": "2026-08-25",
       "entry_price": 491.49099999999993,
       "entry_cost": 179649.85175637496,
-      "holding_bars": 5,
-      "last_bar_date": "2026-09-01",
+      "holding_bars": 6,
+      "last_bar_date": "2026-09-02",
       "close": 518.0,
       "market_value": 189070.0,
       "unrealized_pnl": 9420.148243625037,
       "unrealized_return_pct": 5.393588081979139
-    }
-  ],
-  "pending_orders": [
+    },
     {
-      "type": "buy",
       "symbol": "3006.TW",
       "name": "晶豪科",
-      "signal_date": "2026-09-01",
-      "status": "pending_next_open"
+      "shares": 629,
+      "entry_signal_date": "2026-09-01",
+      "entry_date": "2026-09-02",
+      "entry_price": 276.27599999999995,
+      "entry_cost": 174025.23708569998,
+      "holding_bars": 1,
+      "last_bar_date": "2026-09-02",
+      "close": 281.5,
+      "market_value": 177063.5,
+      "unrealized_pnl": 3038.262914300023,
+      "unrealized_return_pct": 1.8908627604280026
     }
-  ]
+  ],
+  "pending_orders": []
 }
