@@ -13,12 +13,12 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 72,
-      "close": 1155.0,
-      "market_value": 240240.0,
-      "unrealized_pnl": 40560.0,
-      "unrealized_return_pct": 20.3125,
-      "last_bar_date": "2026-09-24"
+      "holding_bars": 73,
+      "close": 1195.0,
+      "market_value": 248560.0,
+      "unrealized_pnl": 48880.0,
+      "unrealized_return_pct": 24.479166666666675,
+      "last_bar_date": "2026-09-29"
     },
     {
       "symbol": "2408.TW",
@@ -28,12 +28,12 @@
       "entry_date": "2026-08-25",
       "entry_price": 491.49099999999993,
       "entry_cost": 179649.85175637496,
-      "holding_bars": 20,
-      "last_bar_date": "2026-09-24",
-      "close": 503.0,
-      "market_value": 183595.0,
-      "unrealized_pnl": 3945.148243625037,
-      "unrealized_return_pct": 2.3416502031573527
+      "holding_bars": 21,
+      "last_bar_date": "2026-09-29",
+      "close": 506.0,
+      "market_value": 184690.0,
+      "unrealized_pnl": 5040.148243625037,
+      "unrealized_return_pct": 2.952037778921701
     },
     {
       "symbol": "3006.TW",
@@ -43,12 +43,12 @@
       "entry_date": "2026-09-02",
       "entry_price": 276.27599999999995,
       "entry_cost": 174025.23708569998,
-      "holding_bars": 15,
-      "last_bar_date": "2026-09-24",
-      "close": 275.0,
-      "market_value": 172975.0,
-      "unrealized_pnl": -1050.237085699977,
-      "unrealized_return_pct": -0.4618569835960984
+      "holding_bars": 16,
+      "last_bar_date": "2026-09-29",
+      "close": 285.0,
+      "market_value": 179265.0,
+      "unrealized_pnl": 5239.762914300023,
+      "unrealized_return_pct": 3.1577118533640425
     }
   ],
   "pending_orders": []
