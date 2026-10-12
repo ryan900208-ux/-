@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-08",
-  "market_regime": "nan",
+  "date": "2026-10-12",
+  "market_regime": "bull",
   "cash": 47714.6206761013,
   "equity": 821497.6206761013,
   "total_return_pct": -17.850237932389867,
@@ -1162,6 +1162,18 @@
       "candidate_rows": 0,
       "exit_signals": 0,
       "benchmark": 1106693.77
+    },
+    {
+      "date": "2026-10-12",
+      "cash": 47714.6206761013,
+      "market_value": 773783.0,
+      "equity": 821497.6206761013,
+      "total_return_pct": -17.850237932389867,
+      "positions": 4,
+      "pending_orders": 0,
+      "candidate_rows": 0,
+      "exit_signals": 0,
+      "benchmark": 1094773.33
     }
   ]
 }
