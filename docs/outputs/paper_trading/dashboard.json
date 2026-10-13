@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-12",
+  "date": "2026-10-08",
   "market_regime": "bull",
   "cash": 47714.6206761013,
   "equity": 821497.6206761013,
@@ -1161,7 +1161,7 @@
       "pending_orders": 0,
       "candidate_rows": 0,
       "exit_signals": 0,
-      "benchmark": 1106693.77
+      "benchmark": 1096203.72
     },
     {
       "date": "2026-10-12",
