@@ -1,7 +1,7 @@
 {
   "model_version": "Quality Momentum Optimized",
   "initial_cash": 1000000.0,
-  "cash": 492160.3391670013,
+  "cash": 345502.9496589238,
   "start_date": "2026-07-03",
   "last_signal_date": "2026-10-21",
   "positions": [
@@ -13,20 +13,36 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 84,
-      "close": 1175.0,
-      "market_value": 244400.0,
-      "unrealized_pnl": 44720.0,
-      "unrealized_return_pct": 22.395833333333325,
-      "last_bar_date": "2026-10-21"
+      "holding_bars": 85,
+      "close": 1160.0,
+      "market_value": 241280.0,
+      "unrealized_pnl": 41600.0,
+      "unrealized_return_pct": 20.833333333333325,
+      "last_bar_date": "2026-10-22"
+    },
+    {
+      "symbol": "3535.TW",
+      "name": "晶彩科",
+      "shares": 1499,
+      "entry_signal_date": "2026-10-21",
+      "entry_date": "2026-10-22",
+      "entry_price": 97.6975984725952,
+      "entry_cost": 146657.38950807755,
+      "holding_bars": 1,
+      "last_bar_date": "2026-10-22",
+      "close": 90.9000015258789,
+      "market_value": 136259.10228729248,
+      "unrealized_pnl": -10398.287220785074,
+      "unrealized_return_pct": -6.957793285597569
     }
   ],
   "pending_orders": [
     {
-      "type": "buy",
+      "type": "sell",
       "symbol": "3535.TW",
       "name": "晶彩科",
-      "signal_date": "2026-10-21",
+      "signal_date": "2026-10-22",
+      "reason": "below_ma120",
       "status": "pending_next_open"
     }
   ]
