@@ -1,9 +1,9 @@
 {
-  "date": "2026-10-22",
+  "date": "2026-10-23",
   "market_regime": "bull",
-  "cash": 345502.9496589238,
-  "equity": 723042.0519462163,
-  "total_return_pct": -27.69579480537837,
+  "cash": 481023.4492628353,
+  "equity": 722303.4492628353,
+  "total_return_pct": -27.76965507371647,
   "positions": [
     {
       "symbol": "6446.TW",
@@ -13,39 +13,15 @@
       "entry_date": "2026-06-12",
       "entry_price": 960.0,
       "entry_cost": 199680.0,
-      "holding_bars": 85,
+      "holding_bars": 86,
       "close": 1160.0,
       "market_value": 241280.0,
       "unrealized_pnl": 41600.0,
       "unrealized_return_pct": 20.833333333333325,
-      "last_bar_date": "2026-10-22"
-    },
-    {
-      "symbol": "3535.TW",
-      "name": "晶彩科",
-      "shares": 1499,
-      "entry_signal_date": "2026-10-21",
-      "entry_date": "2026-10-22",
-      "entry_price": 97.6975984725952,
-      "entry_cost": 146657.38950807755,
-      "holding_bars": 1,
-      "last_bar_date": "2026-10-22",
-      "close": 90.9000015258789,
-      "market_value": 136259.10228729248,
-      "unrealized_pnl": -10398.287220785074,
-      "unrealized_return_pct": -6.957793285597569
+      "last_bar_date": "2026-10-23"
     }
   ],
-  "pending_orders": [
-    {
-      "type": "sell",
-      "symbol": "3535.TW",
-      "name": "晶彩科",
-      "signal_date": "2026-10-22",
-      "reason": "below_ma120",
-      "status": "pending_next_open"
-    }
-  ],
+  "pending_orders": [],
   "candidates": [],
   "trades": [
     {
@@ -212,6 +188,21 @@
       "return_pct": -0.10578220150521567,
       "holding_bars": 31,
       "exit_reason": "stop_loss"
+    },
+    {
+      "symbol": "3535.TW",
+      "name": "晶彩科",
+      "entry_signal_date": "2026-10-21",
+      "entry_date": "2026-10-22",
+      "exit_signal_date": "2026-10-22",
+      "exit_date": "2026-10-23",
+      "entry_price": 97.6975984725952,
+      "exit_price": 90.9000015258789,
+      "shares": 1499,
+      "pnl": -11136.889904166019,
+      "return_pct": -0.06957793285597569,
+      "holding_bars": 1,
+      "exit_reason": "below_ma120"
     }
   ],
   "snapshots": [
@@ -1269,6 +1260,18 @@
       "pending_orders": 1,
       "candidate_rows": 0,
       "exit_signals": 1,
+      "benchmark": 1019436.12
+    },
+    {
+      "date": "2026-10-23",
+      "cash": 481023.4492628353,
+      "market_value": 241280.0,
+      "equity": 722303.4492628353,
+      "total_return_pct": -27.76965507371647,
+      "positions": 1,
+      "pending_orders": 0,
+      "candidate_rows": 0,
+      "exit_signals": 0,
       "benchmark": 1019436.12
     }
   ]
