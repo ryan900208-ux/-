@@ -1,34 +1,9 @@
 {
   "model_version": "Quality Momentum Optimized",
   "initial_cash": 1000000.0,
-  "cash": 481023.4492628353,
+  "cash": 703411.4086928354,
   "start_date": "2026-07-03",
   "last_signal_date": "2026-10-21",
-  "positions": [
-    {
-      "symbol": "6446.TW",
-      "name": "藥華藥",
-      "shares": 208,
-      "entry_signal_date": "2026-06-11",
-      "entry_date": "2026-06-12",
-      "entry_price": 960.0,
-      "entry_cost": 199680.0,
-      "holding_bars": 94,
-      "close": 1185.0,
-      "market_value": 246480.0,
-      "unrealized_pnl": 46800.0,
-      "unrealized_return_pct": 23.4375,
-      "last_bar_date": "2026-11-05"
-    }
-  ],
-  "pending_orders": [
-    {
-      "type": "sell",
-      "symbol": "6446.TW",
-      "name": "藥華藥",
-      "signal_date": "2026-11-05",
-      "reason": "market_bear",
-      "status": "pending_next_open"
-    }
-  ]
+  "positions": [],
+  "pending_orders": []
 }
