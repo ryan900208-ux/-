@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "market_regime": "bear",
   "cash": 703411.4086928354,
   "equity": 703411.4086928354,
@@ -1404,6 +1404,18 @@
       "candidate_rows": 0,
       "exit_signals": 0,
       "benchmark": 950774.34
+    },
+    {
+      "date": "2026-11-11",
+      "cash": 703411.4086928354,
+      "market_value": 0.0,
+      "equity": 703411.4086928354,
+      "total_return_pct": -29.658859130716465,
+      "positions": 0,
+      "pending_orders": 0,
+      "candidate_rows": 0,
+      "exit_signals": 0,
+      "benchmark": 984151.58
     }
   ]
 }
